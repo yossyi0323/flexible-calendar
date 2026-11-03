@@ -8,6 +8,7 @@ declare global {
 }
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
+  await expect(page.locator(".fc-calendar")).toBeVisible();
   await page.getByRole("button", { name: "Month", exact: true }).click();
 });
 test("midnight event is a single two-day bar and spans exact date columns", async ({

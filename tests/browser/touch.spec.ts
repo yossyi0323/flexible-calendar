@@ -3,6 +3,7 @@ test("mobile layout stays within viewport and touch activates events", async ({
   page,
 }) => {
   await page.goto("/");
+  await expect(page.locator(".fc-calendar")).toBeVisible();
   await page.selectOption("#scenario", "plain");
   await page.getByRole("button", { name: "Day", exact: true }).tap();
   expect(
@@ -18,6 +19,7 @@ test("mobile layout stays within viewport and touch activates events", async ({
 });
 test("touch taps empty cells to create a new event", async ({ page }) => {
   await page.goto("/");
+  await expect(page.locator(".fc-calendar")).toBeVisible();
   await page.selectOption("#scenario", "plain");
   await page.getByRole("button", { name: "Day", exact: true }).tap();
   await page.evaluate(() => window.demoCalendar.scrollToTime(600));

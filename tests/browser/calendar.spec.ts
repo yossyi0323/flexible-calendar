@@ -30,6 +30,7 @@ async function drag(
 }
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
+  await expect(page.locator(".fc-calendar")).toBeVisible();
 });
 test("renders real date × resource columns and independent overnight segments", async ({
   page,

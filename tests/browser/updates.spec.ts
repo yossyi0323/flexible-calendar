@@ -7,6 +7,7 @@ declare global {
 }
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
+  await expect(page.locator(".fc-calendar")).toBeVisible();
 });
 test("event updates preserve unrelated columns, header, scroller and scroll position", async ({
   page,

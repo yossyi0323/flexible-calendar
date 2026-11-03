@@ -9,6 +9,7 @@ declare global {
 test.use({ timezoneId: "America/New_York" });
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
+  await expect(page.locator(".fc-calendar")).toBeVisible();
 });
 test("edits exact dates and times in the calendar zone, including overnight events", async ({
   page,

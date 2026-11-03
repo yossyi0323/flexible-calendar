@@ -1,12 +1,13 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-for (const theme of ["light", "dark"]) {
-  test(`${theme} calendar views have no automatic WCAG A/AA violations`, async ({
-    page,
-  }) => {
-    await page.goto("/");
-    await page.selectOption("#theme", theme);
-    for (const view of ["Vertical", "Month", "Agenda"]) {
+for (const theme of ["light", "dark"])
+  for (const view of ["Vertical", "Month", "Agenda"])
+    test(`${theme} ${view} has no automatic WCAG A/AA violations`, async ({
+      page,
+    }) => {
+      await page.goto("/");
+      await expect(page.locator(".fc-calendar")).toBeVisible();
+      await page.selectOption("#theme", theme);
       await page.getByRole("button", { name: view, exact: true }).click();
       const result = await new AxeBuilder({ page })
         .include(".fc-calendar")
@@ -18,9 +19,7 @@ for (const theme of ["light", "dark"]) {
           nodes: v.nodes.map((n) => n.target),
         })),
       ).toEqual([]);
-    }
-  });
-}
+    });
 test("custom React and Vue content survives navigation", async ({ page }) => {
   for (const framework of ["react", "vue"]) {
     await page.goto(`/examples/${framework}.html`);
@@ -35,6 +34,7 @@ test("custom React and Vue content survives navigation", async ({ page }) => {
 });
 test("screenshots for visual review", async ({ page }, testInfo) => {
   await page.goto("/");
+  await expect(page.locator(".fc-calendar")).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 1000 });
   for (const theme of ["light", "dark"]) {
     await page.selectOption("#theme", theme);
