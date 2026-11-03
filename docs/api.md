@@ -54,20 +54,20 @@ The end is **exclusive**, including for all-day events. Events with invalid date
 | `minMinute`, `maxMinute` | `0`, `1440` | Visible wall-clock bounds                                 |
 | `step`                   | `30`        | Selection, keyboard and pointer snap increment in minutes |
 
-Month always displays six weeks; work-week excludes Saturday/Sunday after applying the chosen week start. `vertical` starts exactly on the anchor date. Week and work-week start at the enclosing week's boundary. Agenda lists the anchor date and following `days - 1` dates.
+Month displays the enclosing 4–6 weeks (`monthFixedWeeks: true` forces six); work-week excludes Saturday/Sunday after applying the chosen week start. `vertical` starts exactly on the anchor date. Week and work-week start at the enclosing week's boundary. Agenda lists the anchor date and following `days - 1` dates.
 
-When resources are present, time views show events whose resource ID matches the column. Without resources, all events appear regardless of their resource assignment. Month and agenda show all supplied events. A resource ID array displays one input event in multiple columns; month and agenda still list it once per intersecting date. A drag to another column proposes that target as the new assignment; use the original event in the callback if your application needs a different reassignment rule. Resource IDs are independent from dates; empty per-date resources produce a single ungrouped column for that date.
+When resources are present, time views show events whose resource ID matches the column. Without resources, all events appear regardless of their resource assignment. Month and agenda show all supplied events. A resource ID array displays one input event in multiple columns; month renders one continuous bar per intersecting week, and agenda lists it once per intersecting date. A drag to another column proposes that target as the new assignment; use the original event in the callback if your application needs a different reassignment rule. Resource IDs are independent from dates; empty per-date resources produce a single ungrouped column for that date.
 
 ## DOM options
 
-- **Geometry:** `height` (680px), `hourHeight` (64px), `columnWidth` (minimum 160px), `scrollToMinute`, `monthMaxEvents` (3).
+- **Geometry:** `height` (680px), `hourHeight` (64px), `columnWidth` (minimum 160px), `scrollToMinute`, `monthMaxEvents` (3 visible event lanes), `monthOverflow` (`"popup"`, or `"expand"` for inline expansion).
 - **Appearance:** `theme: 'light' | 'dark' | 'auto'`, `direction: 'ltr' | 'rtl'`, `messages`, `selectedEventId`, `backgroundEvents`, `now`.
 - **Formatting:** `formats.time(date)`, `formats.day(date)`, `formats.period(start, exclusiveEnd, view)` override default Intl labels.
 - **Layout:** `dayLayoutAlgorithm` accepts `no-overlap` (default), `overlap`, or a function from clipped segments to normalized positions.
 - **Controls:** `toolbar` (true), `renderToolbar(context)`, `views` (all built-in views), `selectable` (true), `editable` (true), `resizable` (true), `touchSelection` (false).
 - **Rendering:** `renderEvent(event, { view, date })`, `renderColumnHeader(column)` return text or a caller-created DOM node. Text is never interpreted as HTML. Nodes are trusted application content; do not interpolate untrusted HTML.
 - **Styling:** `eventStyle(event)`, `columnStyle(column)`, `dayStyle(dateKey)` return `{ className?, style? }`. Column styling can supply a date-specific gradient without querying private DOM structure.
-- **Lifecycle:** `onBeforeRender`, `onRender` let integrations clean up and attach custom content. Do not synchronously update calendar options from these hooks; that would trigger recursive rendering.
+- **Lifecycle:** `onBeforeRender({ partial })`, `onRender` let integrations clean up and attach custom content. When `partial` is true, unaffected nodes remain mounted; only dispose content whose nodes were removed. Month popup changes also notify `onRender`. Do not synchronously update calendar options from these hooks; that would trigger recursive rendering.
 
 Custom content sits inside event buttons; avoid nested buttons/links/form controls. `renderReactEvent` and `renderReactColumnHeader` accept React nodes and preserve context. Vue exposes `event` and `columnHeader` slots. DOM render callbacks remain available in both wrappers.
 
@@ -83,7 +83,7 @@ For asynchronous saves, keep the old array until success, or apply an optimistic
 
 `onNavigate(date, view)`, `onViewChange(view)`, `onRangeChange({start,end}, view)` notify navigation. Range end is exclusive. The range callback fires initially and when view, zone or range changes. The DOM instance manages its current date/view until overridden with `update`; wrappers reapply explicitly supplied props/options. Keep date/view in application state and handle callbacks if the application controls navigation.
 
-`onDrillDown(date, 'day')` overrides the default date-header transition to day view. `onShowMore(events, dateKey)` overrides in-cell expansion. `getExternalEvent(dataTransfer)` and `onExternalDrop(change)` support native HTML5 drag sources; applications own payload validation and insertion.
+`onDrillDown(date, 'day')` overrides the default date-header transition to day view. `onShowMore(events, dateKey)` overrides the built-in overflow popup or inline expansion. The popup lists every event on that date, supports Escape, and returns focus to the overflow button. `getExternalEvent(dataTransfer)` and `onExternalDrop(change)` support native HTML5 drag sources; applications own payload validation and insertion.
 
 ## Instance
 
@@ -132,3 +132,11 @@ customViewRenderers: {
 ```
 
 The renderer also receives `selectSlot` and `changeEvent` functions that run the standard validation/veto callbacks. It owns its custom layout, keyboard and pointer behavior. `renderEvent` creates a normal accessible event button with standard activation behavior. Custom range functions must return 1–366 unique, ascending ISO date keys; invalid ranges fail validation. Import `dateKey` and `shiftDate` from the root entry.
+
+## Updates and rendering
+
+Use immutable event records: replace a changed record and pass a new array. Also replace changed resource, background-event, format and style options rather than mutating nested objects. This includes application-specific fields read by custom renderers.
+
+Event-only updates in time views replace affected date/resource columns and preserve other columns, headers and the scroll container. Structural options, month and agenda use a full view render with scroll/focus restoration. Changes to renderer callback identity also cause a full render. The renderer is not virtualized; see [measured performance](performance.md).
+
+An update during a pointer gesture is queued until completion or cancellation. If the dragged event is removed or its interval/resource changes, the gesture is cancelled and the incoming update is applied. `getOptions()` reports the currently applied options, not the queued options.

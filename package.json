@@ -44,7 +44,8 @@
     "prepack": "npm run build",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:package": "publint && attw --pack --profile esm-only --exclude-entrypoints ./style.css && node scripts/smoke-package.mjs"
+    "test:package": "publint && attw --pack --profile esm-only --exclude-entrypoints ./style.css && node scripts/smoke-package.mjs",
+    "bench": "node scripts/benchmark.mjs"
   },
   "dependencies": {
     "@js-temporal/polyfill": "^0.5.1"

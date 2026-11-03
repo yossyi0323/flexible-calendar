@@ -180,9 +180,7 @@ test("dark mode, Japanese labels, and month overflow", async ({ page }) => {
   await page
     .locator('.fc-month-day[data-date="2026-11-03"] .fc-show-more')
     .click();
-  await expect(
-    page.locator('.fc-month-popup .fc-event'),
-  ).toHaveCount(5);
+  await expect(page.locator(".fc-month-popup .fc-event")).toHaveCount(5);
 });
 test("unmount removes calendar and stops callbacks", async ({ page }) => {
   await page.evaluate(() => window.demoCalendar.destroy());

@@ -9,6 +9,8 @@ A TypeScript calendar with a framework-independent engine and DOM renderer, plus
 ## Features
 
 - Day, week, work-week, month, agenda and configurable N-day vertical views.
+- Continuous multi-day month bars, 4–6 week grids and an accessible overflow popup.
+- Column-level time-view updates; [reproducible performance measurements](docs/performance.md).
 - Multiple resource columns per day, including different resources on different dates.
 - Timed, all-day, overlapping and multi-day events; exclusive end times.
 - Pointer selection, event movement, start/end resize, cross-date/resource movement, external drops and drag auto-scroll.

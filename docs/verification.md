@@ -1,14 +1,14 @@
 # Verification — 2026-11-03
 
-This records checks performed on the initial 0.1.0 implementation. It is evidence for the preview, not a claim that a new library has the production history of an established calendar.
+This records checks performed on the 0.1.0 implementation after the review improvements. It is evidence for the preview, not a claim that a new library has the production history of an established calendar.
 
 ## Automated results
 
 | Check                                           | Result                                                                                                                                |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | Strict TypeScript, including examples and tests | Passed                                                                                                                                |
-| Unit suite                                      | 34 passed                                                                                                                             |
-| Playwright suite                                | 94 passed                                                                                                                             |
+| Unit suite                                      | 41 passed                                                                                                                             |
+| Playwright suite                                | 130 passed                                                                                                                            |
 | Desktop browser engines                         | Chromium, Firefox, WebKit                                                                                                             |
 | Mobile emulation                                | Pixel 7 / Chromium and iPhone 13 / WebKit                                                                                             |
 | axe WCAG 2 A/AA and 2.1 A/AA rules              | No automatic violations in sampled vertical, month and agenda views, in light and dark themes, on all three desktop engines           |
@@ -30,6 +30,10 @@ Coverage includes all six built-in views, navigation/drill-down, empty-slot crea
 
 The native vertical-view regression checks explicitly drag a midnight continuation fragment and verify that the **original event** moves with its real start/end and unchanged ID. Keyboard movement of a continuation across resource columns is covered separately. Unit tests cover exclusive midnight ends, overlap clusters, 1,000-event layout, leap/year boundaries, spring gaps/fall folds, and civil all-day duration during DST transitions.
 
+Additional regressions cover continuous month bars and exclusive ends, 4–6 week ranges, popup keyboard dismissal/focus return/activation/cleanup, optional inline expansion, deferred refresh during a drag, conflicting updates, preserved columns/scroll/header, current callback dispatch, input-order changes, and resource moves/deletion across fragments.
+
+[Browser benchmarks](performance.md) measure 100, 500 and 2,000 events on the same machine before and after the changes.
+
 ## Visual review
 
 The saved images were captured from the functioning playground; they are not mockups. Light and dark vertical views and dark month were inspected for clipping, legibility, headers and event placement.
@@ -44,7 +48,7 @@ The saved images were captured from the functioning playground; they are not moc
 - No existing application's authentication, API, database or production data was involved. No consumer application was migrated.
 - Recurrence, persistence, editor behavior and application-specific optimistic updates belong to the consumer and are not certified by these tests.
 - The renderer is not virtualized; the test of 1,000 layout intervals is not a throughput or browser memory guarantee for arbitrarily large schedules.
-- [Feature differences](features.md) and [DST behavior](dates.md) are explicit preview constraints. In particular, multi-day bars are daily fragments, month overflow expands inline, and the time axis does not duplicate DST fall-back hours.
+- [Feature differences](features.md) and [DST behavior](dates.md) are explicit preview constraints. Time-view all-day events remain daily fragments, and the time axis does not duplicate DST fall-back hours.
 - Repository visibility remains private and `private: true` blocks npm publication. Publication requires the owner's separate review.
 
 CI repeats formatting, type/unit/build checks, package-consumer validation and the browser suite. Local browser binaries used for this run were temporary test dependencies; no user browser profile or global Mac configuration was modified.

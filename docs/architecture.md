@@ -20,6 +20,10 @@ Application data / persistence / editor
 
 Views are presentation over the same event model. Resources represent arbitrary parallel columns (rooms, people, Plan/Do, etc.), not dates. Date keys are separate; midnight splitting is purely visual. A caller can style each column using its real date and resource without reaching into private DOM.
 
-The initial renderer favors transparent, deterministic behavior over virtualization. Updating options redraws the current view, retains scroll position per view, and restores event/column focus where possible. Dense time layouts use interval partitioning; monthly/agenda event scans are per visible date. Benchmark the expected data size before using tens of thousands of events; filter the fetched range in `onRangeChange`. No performance guarantee is made for unbounded event sets.
+`calendar.ts` owns instance lifecycle, navigation and shared context. View rendering lives in `time-view.ts`, `month-view.ts`, `agenda-view.ts` and `toolbar.ts`; `pointer.ts` and `keyboard.ts` own interaction logic. `month-popup.ts` owns dialog cleanup, and `time-update.ts` decides which columns need replacement.
+
+Day boundaries and event segments are indexed once per render. Intl formatters are reused. Event-only time-view updates replace affected date/resource columns; headers, scroll container and unrelated columns remain mounted. Structural changes and month/agenda updates rebuild the view, restoring scroll and focus where possible. Updates during a gesture are deferred; conflicting changes cancel the gesture before applying incoming data. Framework adapters retain custom content in surviving nodes and remove detached mounts.
+
+The renderer is not virtualized. Dense time layouts use interval partitioning; month uses weekly spanning bars with collision-free lanes. Filter fetched ranges using `onRangeChange` and measure the expected data size. [Performance measurements](performance.md) include limits and reproducible commands.
 
 Extension points include generic event records, typed accessors, render callbacks, style callbacks, messages, view selection, per-date resources, background events, veto hooks, lifecycle hooks and the independent core. This version deliberately does not execute plugins or fetch remote data internally.
