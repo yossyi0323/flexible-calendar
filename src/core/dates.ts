@@ -51,6 +51,7 @@ export function visibleDates(
   days = 3,
   weekStartsOn = 1,
   timeZone = defaultTimeZone(),
+  monthFixedWeeks = false,
 ): DateKey[] {
   let start = dateKey(date, timeZone);
   let count = 1;
@@ -64,7 +65,14 @@ export function visibleDates(
       Temporal.PlainDate.from(start).with({ day: 1 }).toString(),
       weekStartsOn,
     );
-    count = 42;
+    const monthEnd = Temporal.PlainDate.from(dateKey(date, timeZone))
+      .with({ day: 1 })
+      .add({ months: 1 })
+      .subtract({ days: 1 })
+      .toString();
+    count = monthFixedWeeks
+      ? 42
+      : differenceInDays(start, weekStart(monthEnd, weekStartsOn)) + 7;
   }
   return Array.from({ length: count }, (_, i) => addDays(start, i)).filter(
     (d) => view !== "work-week" || ![0, 6].includes(dayOfWeek(d)),
@@ -124,6 +132,7 @@ export function getViewDates(config: CalendarConfig): DateKey[] {
     config.days,
     config.weekStartsOn,
     config.timeZone,
+    config.monthFixedWeeks,
   );
 }
 export function navigateCalendar(

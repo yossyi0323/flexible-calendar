@@ -39,7 +39,8 @@ export const Calendar = defineComponent({
           options.onBeforeRender?.();
         },
         onRender: () => {
-          mounts.value = pending;
+          pending = pending.filter((mount) => host.value?.contains(mount.node));
+          mounts.value = [...pending];
           options.onRender?.();
         },
         ...(slots.event

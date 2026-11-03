@@ -50,9 +50,19 @@ export function createPointerController<E extends CalendarEvent>(
     suppressClick = false;
   function hitAt(x: number, y: number): Hit | undefined {
     const { doc, step, min, max } = ctx;
-    const target = doc
-      .elementFromPoint(x, y)
-      ?.closest<HTMLElement>("[data-column-key]");
+    const pointed = doc.elementFromPoint(x, y);
+    let target = pointed?.closest<HTMLElement>("[data-column-key]");
+    if (!target) {
+      const week = pointed?.closest<HTMLElement>(".fc-month-week");
+      target = [
+        ...(week?.querySelectorAll<HTMLElement>(".fc-month-day") ?? []),
+      ].find((cell) => {
+        const rect = cell.getBoundingClientRect();
+        return (
+          x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom
+        );
+      });
+    }
     if (!target || !root.contains(target)) return;
     const rect = target.getBoundingClientRect(),
       allDay = target.dataset.allDay === "true";

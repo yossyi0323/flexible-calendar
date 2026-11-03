@@ -40,6 +40,7 @@ export function createCalendar<E extends CalendarEvent>(
   let scroller: HTMLElement;
   let live: HTMLElement;
   let destroyed = false;
+  const viewCleanups: (() => void)[] = [];
   let pendingOptions: CalendarOptions<E> | undefined;
   let eventIndex: Map<DateKey, Segment<E>[]> | undefined;
   let backgroundIndex: Map<DateKey, Segment<E>[]> | undefined;
@@ -175,6 +176,7 @@ export function createCalendar<E extends CalendarEvent>(
   function render() {
     if (destroyed) return;
     pointer.stopGesture();
+    for (const cleanup of viewCleanups.splice(0)) cleanup();
     eventIndex = undefined;
     backgroundIndex = undefined;
     options.onBeforeRender?.();
@@ -313,6 +315,7 @@ export function createCalendar<E extends CalendarEvent>(
         ) ?? []
       );
     },
+    onViewCleanup: (cleanup) => viewCleanups.push(cleanup),
     flushUpdates,
     isClickSuppressed: () => pointer.isClickSuppressed(),
   };
@@ -379,6 +382,7 @@ export function createCalendar<E extends CalendarEvent>(
     destroy() {
       if (destroyed) return;
       destroyed = true;
+      for (const cleanup of viewCleanups.splice(0)) cleanup();
       pointer.stopGesture();
       win.clearInterval(timer);
       pointer.destroy();

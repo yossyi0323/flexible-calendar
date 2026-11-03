@@ -70,6 +70,8 @@ export interface CalendarConfig<E extends CalendarEvent = CalendarEvent> {
   events: readonly E[];
   date: Date;
   view?: View;
+  /** Use six weeks even when the month fits in four or five. Default false. */
+  monthFixedWeeks?: boolean;
   customViews?: Readonly<Record<string, CustomView>>;
   /** Explicit IANA zone; defaults to the host's zone. */
   timeZone?: string;

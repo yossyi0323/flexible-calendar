@@ -13,6 +13,7 @@ import type {
 export type Content = string | Node;
 export interface Messages {
   today: string;
+  close: string;
   previous: string;
   next: string;
   allDay: string;
@@ -77,6 +78,7 @@ export interface CalendarOptions<
   selectedEventId?: string | null;
   scrollToMinute?: number;
   monthMaxEvents?: number;
+  monthOverflow?: "popup" | "expand";
   messages?: Partial<Messages>;
   backgroundEvents?: readonly E[];
   now?: () => Date;

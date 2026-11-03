@@ -52,6 +52,7 @@ export interface CalendarContext<E extends CalendarEvent> {
     date: DateKey,
     background?: boolean,
   ) => readonly Segment<E>[];
+  onViewCleanup: (cleanup: () => void) => void;
   flushUpdates: () => void;
   isClickSuppressed: () => boolean;
 }

@@ -48,7 +48,8 @@ export function Calendar<E extends CalendarEvent = CalendarEvent>(
         p.onBeforeRender?.();
       },
       onRender: () => {
-        setMounts(pending);
+        pending = pending.filter((mount) => host.current?.contains(mount.node));
+        setMounts([...pending]);
         p.onRender?.();
       },
       ...(p.renderReactEvent

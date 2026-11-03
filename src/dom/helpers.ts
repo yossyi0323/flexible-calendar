@@ -1,6 +1,7 @@
 import type { Content, ElementStyle, Messages } from "./types.js";
 export const englishMessages: Messages = {
   today: "Today",
+  close: "Close",
   previous: "Previous",
   next: "Next",
   allDay: "All day",

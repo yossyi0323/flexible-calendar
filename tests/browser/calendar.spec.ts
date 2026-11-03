@@ -181,7 +181,7 @@ test("dark mode, Japanese labels, and month overflow", async ({ page }) => {
     .locator('.fc-month-day[data-date="2026-11-03"] .fc-show-more')
     .click();
   await expect(
-    page.locator('.fc-month-day[data-date="2026-11-03"] .fc-event'),
+    page.locator('.fc-month-popup .fc-event'),
   ).toHaveCount(5);
 });
 test("unmount removes calendar and stops callbacks", async ({ page }) => {
@@ -247,7 +247,7 @@ test("month move preserves timed event hours and resource", async ({
 }) => {
   await page.getByRole("button", { name: "Month", exact: true }).click();
   const source = await page
-    .locator('.fc-month-day[data-date="2026-11-03"] [data-event-id="2"]')
+    .locator('.fc-month-event[data-date="2026-11-03"][data-event-id="2"]')
     .boundingBox();
   const target = await page
     .locator('.fc-month-day[data-date="2026-11-04"]')
