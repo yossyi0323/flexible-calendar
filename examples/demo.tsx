@@ -5,7 +5,13 @@ import { createCalendar, type CalendarHandle } from "../src/dom/index.js";
 import { dateKey, type CalendarEvent } from "../src/core/index.js";
 import { Button } from "./ui/button.js";
 import { Label } from "./ui/label.js";
-import { NativeSelect, NativeSelectOption } from "./ui/native-select.js";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select.js";
 import { EventEditor } from "./event-editor.js";
 import { at, zone, seed, resources } from "./demo-data.js";
 import "./demo.css";
@@ -119,14 +125,12 @@ function App() {
             Your dates, your columns. Create, move and edit events.
           </p>
         </div>
-        <div className="grid w-full grid-cols-[1.4fr_1fr_1fr] gap-3 sm:flex sm:w-auto">
-          <div className="grid gap-2">
+        <div className="grid w-full grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)] gap-3 sm:flex sm:w-auto">
+          <div className="grid min-w-0 gap-2">
             <Label htmlFor="scenario">Example</Label>
-            <NativeSelect
-              id="scenario"
+            <Select
               value={scenario}
-              onChange={(e) => {
-                const value = e.target.value;
+              onValueChange={(value) => {
                 setScenario(value);
                 events.current = seed(value);
                 calendar.current?.update({
@@ -135,34 +139,37 @@ function App() {
                 });
               }}
             >
-              <NativeSelectOption value="plan">Plan / Do</NativeSelectOption>
-              <NativeSelectOption value="rooms">
-                Meeting rooms
-              </NativeSelectOption>
-              <NativeSelectOption value="plain">
-                Personal calendar
-              </NativeSelectOption>
-            </NativeSelect>
+              <SelectTrigger id="scenario" className="w-full min-w-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="plan">Plan / Do</SelectItem>
+                <SelectItem value="rooms">Meeting rooms</SelectItem>
+                <SelectItem value="plain">Personal calendar</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <div className="grid gap-2">
+          <div className="grid min-w-0 gap-2">
             <Label htmlFor="theme">Theme</Label>
-            <NativeSelect
-              id="theme"
+            <Select
               value={theme}
-              onChange={(e) => setTheme(e.target.value as typeof theme)}
+              onValueChange={(value) => setTheme(value as typeof theme)}
             >
-              <NativeSelectOption value="auto">System</NativeSelectOption>
-              <NativeSelectOption value="light">Light</NativeSelectOption>
-              <NativeSelectOption value="dark">Dark</NativeSelectOption>
-            </NativeSelect>
+              <SelectTrigger id="theme" className="w-full min-w-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">System</SelectItem>
+                <SelectItem value="light">Light</SelectItem>
+                <SelectItem value="dark">Dark</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <div className="grid gap-2">
+          <div className="grid min-w-0 gap-2">
             <Label htmlFor="locale">Locale</Label>
-            <NativeSelect
-              id="locale"
+            <Select
               defaultValue="en-US"
-              onChange={(e) => {
-                const locale = e.target.value;
+              onValueChange={(locale) => {
                 calendar.current?.update({
                   locale,
                   messages:
@@ -184,9 +191,14 @@ function App() {
                 });
               }}
             >
-              <NativeSelectOption value="en-US">English</NativeSelectOption>
-              <NativeSelectOption value="ja-JP">日本語</NativeSelectOption>
-            </NativeSelect>
+              <SelectTrigger id="locale" className="w-full min-w-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en-US">English</SelectItem>
+                <SelectItem value="ja-JP">日本語</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </header>

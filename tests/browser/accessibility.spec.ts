@@ -1,3 +1,4 @@
+import { chooseOption } from "./select-helper.js";
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 for (const theme of ["light", "dark"])
@@ -7,7 +8,7 @@ for (const theme of ["light", "dark"])
     }) => {
       await page.goto("/");
       await expect(page.locator(".fc-calendar")).toBeVisible();
-      await page.selectOption("#theme", theme);
+      await chooseOption(page, "#theme", theme === "dark" ? "Dark" : "Light");
       await page.getByRole("button", { name: view, exact: true }).click();
       const result = await new AxeBuilder({ page })
         .include(".fc-calendar")
@@ -37,7 +38,7 @@ test("screenshots for visual review", async ({ page }, testInfo) => {
   await expect(page.locator(".fc-calendar")).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 1000 });
   for (const theme of ["light", "dark"]) {
-    await page.selectOption("#theme", theme);
+    await chooseOption(page, "#theme", theme === "dark" ? "Dark" : "Light");
     await page.screenshot({
       path: testInfo.outputPath(`${theme}.png`),
       fullPage: true,

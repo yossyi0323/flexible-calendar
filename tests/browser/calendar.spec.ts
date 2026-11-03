@@ -1,3 +1,4 @@
+import { chooseOption } from "./select-helper.js";
 import { test, expect, type Page } from "@playwright/test";
 import type { CalendarHandle } from "../../src/dom/index.js";
 declare global {
@@ -166,7 +167,7 @@ test("read-only mode disables selection and edits", async ({ page }) => {
   await expect(page.locator("#editor")).not.toBeVisible();
 });
 test("dark mode, Japanese labels, and month overflow", async ({ page }) => {
-  await page.selectOption("#theme", "dark");
+  await chooseOption(page, "#theme", "Dark");
   await expect(page.locator(".fc-calendar")).toHaveAttribute(
     "data-theme",
     "dark",
@@ -176,7 +177,7 @@ test("dark mode, Japanese labels, and month overflow", async ({ page }) => {
       .locator(".fc-calendar")
       .evaluate((el) => getComputedStyle(el).backgroundColor),
   ).toBe("rgb(9, 9, 11)");
-  await page.selectOption("#locale", "ja-JP");
+  await chooseOption(page, "#locale", "日本語");
   await page.getByRole("button", { name: "月", exact: true }).click();
   await page
     .locator('.fc-month-day[data-date="2026-11-03"] .fc-show-more')

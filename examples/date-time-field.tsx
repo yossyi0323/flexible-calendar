@@ -49,7 +49,7 @@ export function DateTimeField({
       <legend className="mb-2 text-sm font-medium">{label}</legend>
       <div
         className={
-          allDay ? "grid" : "grid grid-cols-[minmax(0,1fr)_8rem] gap-2"
+          allDay ? "grid" : "grid grid-cols-[max-content_max-content] gap-2"
         }
       >
         <Popover open={open} onOpenChange={setOpen}>
@@ -95,7 +95,7 @@ export function DateTimeField({
             <Label htmlFor={`${id}-time`} className="sr-only">
               {label} time
             </Label>
-            <InputGroup>
+            <InputGroup className="w-auto">
               <InputGroupInput
                 id={`${id}-time`}
                 type="time"
@@ -105,7 +105,7 @@ export function DateTimeField({
                 onChange={(e) => onChange(`${date}T${e.target.value}`)}
                 aria-invalid={invalid}
                 aria-describedby={invalid ? "event-error" : undefined}
-                className="appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                className="w-auto appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
               />
               <InputGroupAddon>
                 <Clock2Icon className="text-muted-foreground" />

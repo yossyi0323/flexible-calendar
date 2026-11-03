@@ -1,3 +1,4 @@
+import { chooseOption } from "./select-helper.js";
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import type { CalendarHandle } from "../../src/dom/index.js";
@@ -108,7 +109,7 @@ for (const theme of ["light", "dark"])
   test(`shadcn editor in ${theme} has no automatic accessibility violations`, async ({
     page,
   }, testInfo) => {
-    await page.selectOption("#theme", theme);
+    await chooseOption(page, "#theme", theme === "dark" ? "Dark" : "Light");
     await page.locator('[data-event-id="2"]').click();
     await expect(page.locator("#editor")).toBeVisible();
     await page.locator("#editor").evaluate(async (node) => {
@@ -169,7 +170,7 @@ for (const theme of ["light", "dark"])
   test(`shadcn date popup ${theme} accessibility and keyboard dismissal`, async ({
     page,
   }, testInfo) => {
-    await page.selectOption("#theme", theme);
+    await chooseOption(page, "#theme", theme === "dark" ? "Dark" : "Light");
     await page.locator('[data-event-id="2"]').click();
     await page
       .getByRole("button", { name: "Choose end date", exact: true })
@@ -230,7 +231,7 @@ for (const viewport of [
     page,
   }, testInfo) => {
     await page.setViewportSize(viewport);
-    await page.selectOption("#theme", "dark");
+    await chooseOption(page, "#theme", "Dark");
     await page.locator('[data-event-id="2"]').click();
     const editor = page.locator("#editor");
     await expect(editor).toBeVisible();
@@ -250,10 +251,56 @@ for (const viewport of [
       expect(time.x).toBeGreaterThan(date.x);
       expect(time.x + time.width).toBeLessThan(viewport.width);
     }
+    const start = (await page.locator("#event-start").boundingBox())!;
+    const end = (await page.locator("#event-end").boundingBox())!;
+    if (viewport.width >= 640) {
+      expect(Math.abs(start.y - end.y)).toBeLessThan(2);
+      expect(end.x).toBeGreaterThan(start.x + start.width);
+    } else {
+      expect(end.y).toBeGreaterThan(start.y);
+    }
     const save = (await page.locator("#save").boundingBox())!;
     expect(save.y + save.height).toBeLessThan(viewport.height);
     await page.screenshot({
       path: testInfo.outputPath(`compact-${viewport.width}.png`),
     });
+  });
+}
+
+for (const theme of ["light", "dark"]) {
+  test(`shadcn resource select in ${theme} supports keyboard selection and persists the column`, async ({
+    page,
+  }) => {
+    await chooseOption(page, "#theme", theme === "dark" ? "Dark" : "Light");
+    await page.locator('[data-event-id="2"]').click();
+    const dialog = (await page.locator("#editor").boundingBox())!;
+    const date = (await page.locator("#event-start").boundingBox())!;
+    const time = (await page.locator("#event-end-time").boundingBox())!;
+    expect(dialog.width).toBeLessThan(600);
+    expect(dialog.x + dialog.width - (time.x + time.width)).toBeLessThan(30);
+    expect(date.x - dialog.x).toBeLessThan(30);
+    await page.locator("#event-resource").click();
+    const options = page.getByRole("listbox");
+    await expect(options).toBeVisible();
+    await expect(
+      options.getByRole("option", { name: "DO", exact: true }),
+    ).toHaveAttribute("aria-selected", "true");
+    const result = await new AxeBuilder({ page })
+      .include('[role="listbox"]')
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .analyze();
+    expect(result.violations).toEqual([]);
+    await page.keyboard.press("Home");
+    await page.keyboard.press("Enter");
+    await expect(options).not.toBeVisible();
+    await expect(page.locator("#event-resource")).toContainText("PLAN");
+    await page.locator("#save").click();
+    expect(
+      await page.evaluate(
+        () =>
+          window.demoCalendar.getOptions().events.find((e) => e.id === "2")!
+            .resourceId,
+      ),
+    ).toBe("plan");
   });
 }

@@ -12,7 +12,14 @@ import { DateTimePicker } from "./date-time-picker.js";
 import { Button } from "./ui/button.js";
 import { Input } from "./ui/input.js";
 import { Label } from "./ui/label.js";
-import { NativeSelect, NativeSelectOption } from "./ui/native-select.js";
+import { Checkbox } from "./ui/checkbox.js";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select.js";
 import {
   Dialog,
   DialogContent,
@@ -123,7 +130,7 @@ export function EventEditor({
     >
       <DialogContent
         id="editor"
-        className="max-h-[calc(100dvh-2rem)] overflow-y-auto"
+        className="w-fit max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-[calc(100%-2rem)]"
         onCloseAutoFocus={(e) => {
           e.preventDefault();
           onRestoreFocus();
@@ -132,10 +139,8 @@ export function EventEditor({
         <DialogHeader>
           <DialogTitle>{isNew ? "New event" : "Edit event"}</DialogTitle>
           <DialogDescription>
-            Set the schedule in {timeZone}.{" "}
-            {allDay
-              ? "The end date is included."
-              : "Times can be entered to the minute."}
+            {timeZone}
+            {allDay ? " · End date included" : ""}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="grid gap-5">
@@ -152,12 +157,10 @@ export function EventEditor({
             />
           </div>
           <Label className="flex items-center gap-2">
-            <input
+            <Checkbox
               id="event-all-day"
-              type="checkbox"
               checked={allDay}
-              onChange={(e) => toggleAllDay(e.target.checked)}
-              className="size-4 accent-primary"
+              onCheckedChange={(checked) => toggleAllDay(checked === true)}
             />
             All day
           </Label>
@@ -175,25 +178,29 @@ export function EventEditor({
           {resources.length > 0 && (
             <div className="grid gap-2">
               <Label htmlFor="event-resource">Column</Label>
-              <NativeSelect
-                id="event-resource"
-                value={resource}
-                onChange={(e) => setResource(e.target.value)}
+              <Select
+                value={resource ? `resource:${resource}` : "none"}
+                onValueChange={(value) =>
+                  setResource(value === "none" ? "" : value.slice(9))
+                }
               >
-                {Array.isArray(event.resourceId) && (
-                  <NativeSelectOption value="">
-                    Keep current columns
-                  </NativeSelectOption>
-                )}
-                {!event.resourceId && (
-                  <NativeSelectOption value="">Unassigned</NativeSelectOption>
-                )}
-                {resources.map((r) => (
-                  <NativeSelectOption key={r.id} value={r.id}>
-                    {r.title}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
+                <SelectTrigger id="event-resource" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.isArray(event.resourceId) && (
+                    <SelectItem value="none">Keep current columns</SelectItem>
+                  )}
+                  {!event.resourceId && (
+                    <SelectItem value="none">Unassigned</SelectItem>
+                  )}
+                  {resources.map((r) => (
+                    <SelectItem key={r.id} value={`resource:${r.id}`}>
+                      {r.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
           {error && (

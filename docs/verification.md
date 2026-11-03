@@ -8,7 +8,7 @@ This records checks performed on the 0.1.0 implementation after the review impro
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | Strict TypeScript, including examples and tests | Passed                                                                                                                                |
 | Unit suite                                      | 41 passed                                                                                                                             |
-| Playwright suite                                | 205 passed                                                                                                                            |
+| Playwright suite                                | 211 passed                                                                                                                            |
 | Desktop browser engines                         | Chromium, Firefox, WebKit                                                                                                             |
 | Mobile emulation                                | Pixel 7 / Chromium and iPhone 13 / WebKit                                                                                             |
 | axe WCAG 2 A/AA and 2.1 A/AA rules              | No automatic violations in sampled vertical, month and agenda views, in light and dark themes, on all three desktop engines           |
@@ -34,7 +34,7 @@ Additional regressions cover continuous month bars and exclusive ends, 4–6 wee
 
 [Browser benchmarks](performance.md) measure 100, 500 and 2,000 events on the same machine before and after the changes.
 
-The playground editor uses compact start/end rows with shadcn Calendar popovers and the official InputGroup native time inputs. It is tested for calendar date selection, popup Escape/focus restoration, light/dark accessibility, typed minute-level times, native time input semantics, date changes preserving the interval, compact desktop/mobile geometry, all-day time-field hiding, overnight dates, invalid intervals, cancellation/focus return, inclusive all-day end dates and light/dark accessibility. Browser time zone is set to America/New_York while the calendar uses Asia/Tokyo to verify that input does not depend on the device zone.
+The playground editor uses side-by-side start/end fields (stacked on narrow screens) with shadcn Calendar popovers and the official InputGroup native time inputs. It is tested for calendar date selection, popup Escape/focus restoration, light/dark accessibility, typed minute-level times, native time input semantics, date changes preserving the interval, content-sized desktop/mobile geometry, shadcn Select keyboard navigation and persisted resource selection, all-day time-field hiding, overnight dates, invalid intervals, cancellation/focus return, inclusive all-day end dates and light/dark accessibility. Browser time zone is set to America/New_York while the calendar uses Asia/Tokyo to verify that input does not depend on the device zone.
 
 Pointer regressions also cover downward end-resize from 23:30 through midnight to 01:00 and 02:00, overnight slot creation, edge auto-scroll and Escape restoration of the original interval and axis.
 

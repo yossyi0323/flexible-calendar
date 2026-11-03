@@ -17,7 +17,7 @@ export function DateTimePicker({
   onChange,
 }: Props) {
   return (
-    <div id="event-schedule" className="grid gap-4">
+    <div id="event-schedule" className="grid gap-4 sm:grid-cols-2">
       <DateTimeField
         id="event-start"
         label="Start"
