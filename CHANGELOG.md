@@ -33,3 +33,5 @@ Private development preview; no npm release has been made.
 - Keep the event editor compact with start/end date-and-time rows; show date calendars only in popovers.
 
 - Use official shadcn Select and Checkbox throughout the playground; size the editor to its contents with start/end fields side by side on desktop.
+
+- Keep the timezone and all-day corner labels aligned with the sticky time gutter while scrolling horizontally; overflowing all-day event lists scroll within their resource cells.

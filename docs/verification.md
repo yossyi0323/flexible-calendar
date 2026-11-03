@@ -8,7 +8,7 @@ This records checks performed on the 0.1.0 implementation after the review impro
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | Strict TypeScript, including examples and tests | Passed                                                                                                                                |
 | Unit suite                                      | 41 passed                                                                                                                             |
-| Playwright suite                                | 211 passed                                                                                                                            |
+| Playwright suite                                | 220 passed                                                                                                                            |
 | Desktop browser engines                         | Chromium, Firefox, WebKit                                                                                                             |
 | Mobile emulation                                | Pixel 7 / Chromium and iPhone 13 / WebKit                                                                                             |
 | axe WCAG 2 A/AA and 2.1 A/AA rules              | No automatic violations in sampled vertical, month and agenda views, in light and dark themes, on all three desktop engines           |
@@ -59,3 +59,5 @@ The saved images were captured from the functioning playground; they are not moc
 - Repository visibility remains private and `private: true` blocks npm publication. Publication requires the owner's separate review.
 
 CI repeats formatting, type/unit/build checks, package-consumer validation and the browser suite. Local browser binaries used for this run were temporary test dependencies; no user browser profile or global Mac configuration was modified.
+
+Horizontal scroll regression tests check all three gutter positions, column alignment and hit testing in LTR/RTL after simultaneous vertical/horizontal scrolling. A dense all-day fixture verifies cell overflow remains scrollable.

@@ -150,6 +150,10 @@
   font-size: 12px;
 }
 .fc-gutter {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 1;
+  background: var(--fc-bg);
   font-size: 11px;
   color: var(--fc-muted);
   display: flex;
@@ -475,7 +479,9 @@
 .fc-calendar[data-touch-selection="true"] .fc-all-day-cell {
   touch-action: none;
 }
-.fc-all-day-row {
+/* Keep the row in the main scroll container so its gutter can stick horizontally.
+   Each resource's event list scrolls vertically when it reaches the height cap. */
+.fc-all-day-cell {
   max-height: 160px;
   overflow-y: auto;
 }
