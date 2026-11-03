@@ -15,9 +15,12 @@ test("edits exact dates and times in the calendar zone, including overnight even
   page,
 }) => {
   await page.locator('[data-event-id="2"]').click();
-  await expect(page.locator("#event-start")).toHaveValue("2026-11-03T09:15");
-  await page.locator("#event-start").fill("2026-11-03T23:10");
-  await page.locator("#event-end").fill("2026-11-04T01:25");
+  await expect(page.locator("#event-start")).toHaveValue("2026-11-03");
+  await expect(page.locator("#event-start-time")).toHaveValue("09:15");
+  await page.locator("#event-start").fill("2026-11-03");
+  await page.locator("#event-start-time").fill("23:10");
+  await page.locator("#event-end").fill("2026-11-04");
+  await page.locator("#event-end-time").fill("01:25");
   await page.locator("#save").click();
   await expect(page.locator("#editor")).not.toBeVisible();
   expect(
@@ -34,7 +37,8 @@ test("rejects reversed intervals without closing or changing the event", async (
   page,
 }) => {
   await page.locator('[data-event-id="2"]').click();
-  await page.locator("#event-end").fill("2026-11-03T08:00");
+  await page.locator("#event-end").fill("2026-11-03");
+  await page.locator("#event-end-time").fill("08:00");
   await page.locator("#save").click();
   await expect(page.getByRole("alert")).toHaveText("End must be after start.");
   expect(
@@ -54,8 +58,10 @@ test("new events accept typed times independently of the selection interval", as
   await page.locator(".fc-time-column").nth(1).focus();
   await page.keyboard.press("Enter");
   await page.locator("#event-title").fill("Typed schedule");
-  await page.locator("#event-start").fill("2026-11-03T12:07");
-  await page.locator("#event-end").fill("2026-11-03T12:42");
+  await page.locator("#event-start").fill("2026-11-03");
+  await page.locator("#event-start-time").fill("12:07");
+  await page.locator("#event-end").fill("2026-11-03");
+  await page.locator("#event-end-time").fill("12:42");
   await page.locator("#save").click();
   expect(
     await page.evaluate(() => {
@@ -110,4 +116,68 @@ for (const theme of ["light", "dark"])
     });
     await page.keyboard.press("Escape");
     await expect(page.locator("#editor")).not.toBeVisible();
+  });
+
+test("shadcn calendar selects a date and keeps typed time in the calendar zone", async ({
+  page,
+}) => {
+  await page.locator('[data-event-id="2"]').click();
+  await expect(
+    page.locator(
+      '#editor input[type="datetime-local"], #editor input[type="date"], #editor input[type="time"]',
+    ),
+  ).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Choose end date", exact: true })
+    .click();
+  const popup = page.locator("#event-end-popover");
+  await expect(popup).toBeVisible();
+  await popup
+    .getByRole("button", { name: /Wednesday, November 4th, 2026/ })
+    .click();
+  await expect(page.locator("#event-end")).toHaveValue("2026-11-04");
+  await page.locator("#event-end-time").fill("02:07");
+  await page.locator("#save").click();
+  expect(
+    await page.evaluate(() =>
+      window.demoCalendar
+        .getOptions()
+        .events.find((e) => e.id === "2")!
+        .end.toISOString(),
+    ),
+  ).toBe("2026-11-03T17:07:00.000Z");
+});
+for (const theme of ["light", "dark"])
+  test(`shadcn date popup ${theme} accessibility and keyboard dismissal`, async ({
+    page,
+  }, testInfo) => {
+    await page.selectOption("#theme", theme);
+    await page.locator('[data-event-id="2"]').click();
+    await page
+      .getByRole("button", { name: "Choose start date", exact: true })
+      .click();
+    const popup = page.locator("#event-start-popover");
+    await expect(popup).toBeVisible();
+    await popup.evaluate(async (n) => {
+      await Promise.all(n.getAnimations().map((a) => a.finished));
+    });
+    const result = await new AxeBuilder({ page })
+      .include("#event-start-popover")
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .analyze();
+    expect(
+      result.violations.map((v) => ({
+        id: v.id,
+        nodes: v.nodes.map((n) => n.target),
+      })),
+    ).toEqual([]);
+    await page.screenshot({
+      path: testInfo.outputPath(`date-picker-${theme}.png`),
+    });
+    await page.keyboard.press("Escape");
+    await expect(popup).not.toBeVisible();
+    await expect(page.locator("#editor")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Choose start date", exact: true }),
+    ).toBeFocused();
   });

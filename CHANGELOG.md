@@ -21,4 +21,7 @@
 
 - Downward timed resize and slot selection can continue past midnight into the following day, with temporary next-day hours and edge auto-scroll.
 
+- Replace the native date-time popup with shadcn Calendar + Popover and direct date/time text entry.
+- Poll file changes in the development server so external edits invalidate served modules.
+
 Private development preview; no npm release has been made.

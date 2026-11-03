@@ -8,6 +8,7 @@ import {
   type CalendarEvent,
   type Resource,
 } from "../src/core/index.js";
+import { DateTimeField } from "./date-time-field.js";
 import { Button } from "./ui/button.js";
 import { Input } from "./ui/input.js";
 import { Label } from "./ui/label.js";
@@ -161,40 +162,28 @@ export function EventEditor({
             All day
           </Label>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid min-w-0 gap-2">
-              <Label htmlFor="event-start">
-                {allDay ? "Start date" : "Start"}
-              </Label>
-              <Input
-                id="event-start"
-                type={allDay ? "date" : "datetime-local"}
-                value={start}
-                onChange={(e) => {
-                  setStart(e.target.value);
-                  setError("");
-                }}
-                required
-                step={allDay ? 1 : 60}
-                aria-invalid={!!error}
-                aria-describedby={error ? "event-error" : undefined}
-              />
-            </div>
-            <div className="grid min-w-0 gap-2">
-              <Label htmlFor="event-end">{allDay ? "End date" : "End"}</Label>
-              <Input
-                id="event-end"
-                type={allDay ? "date" : "datetime-local"}
-                value={end}
-                onChange={(e) => {
-                  setEnd(e.target.value);
-                  setError("");
-                }}
-                required
-                step={allDay ? 1 : 60}
-                aria-invalid={!!error}
-                aria-describedby={error ? "event-error" : undefined}
-              />
-            </div>
+            <DateTimeField
+              id="event-start"
+              label="Start"
+              value={start}
+              allDay={allDay}
+              invalid={!!error}
+              onChange={(value) => {
+                setStart(value);
+                setError("");
+              }}
+            />
+            <DateTimeField
+              id="event-end"
+              label="End"
+              value={end}
+              allDay={allDay}
+              invalid={!!error}
+              onChange={(value) => {
+                setEnd(value);
+                setError("");
+              }}
+            />
           </div>
           {resources.length > 0 && (
             <div className="grid gap-2">
