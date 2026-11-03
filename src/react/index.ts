@@ -38,28 +38,31 @@ export function Calendar<E extends CalendarEvent = CalendarEvent>(
   const instance = useRef<CalendarHandle<E> | null>(null);
   const latest = useRef(props);
   latest.current = props;
+  const pendingMounts = useRef<Mount[]>([]);
   const [mounts, setMounts] = useState<Mount[]>([]);
   function adapterOptions(p: CalendarProps<E>): CalendarOptions<E> {
-    let pending: Mount[] = [];
+    const pending = pendingMounts;
     return {
       ...p,
-      onBeforeRender: () => {
-        pending = [];
-        p.onBeforeRender?.();
+      onBeforeRender: (context) => {
+        if (!context.partial) pending.current = [];
+        p.onBeforeRender?.(context);
       },
       onRender: () => {
-        pending = pending.filter((mount) => host.current?.contains(mount.node));
-        setMounts([...pending]);
+        pending.current = pending.current.filter((mount) =>
+          host.current?.contains(mount.node),
+        );
+        setMounts([...pending.current]);
         p.onRender?.();
       },
       ...(p.renderReactEvent
         ? {
             renderEvent: (event: E, context: { view: View; date: DateKey }) => {
               const node = host.current!.ownerDocument.createElement("span");
-              pending.push({
+              pending.current.push({
                 node,
                 content: p.renderReactEvent!(event, context),
-                key: `${event.id}/${context.date}/${pending.length}`,
+                key: `${event.id}/${context.date}/${pending.current.length}`,
               });
               return node;
             },
@@ -69,7 +72,7 @@ export function Calendar<E extends CalendarEvent = CalendarEvent>(
         ? {
             renderColumnHeader: (column: Column) => {
               const node = host.current!.ownerDocument.createElement("span");
-              pending.push({
+              pending.current.push({
                 node,
                 content: p.renderReactColumnHeader!(column),
                 key: column.key,

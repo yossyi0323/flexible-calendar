@@ -30,13 +30,13 @@ export const Calendar = defineComponent({
     const host = shallowRef<HTMLElement>();
     let calendar: CalendarHandle | undefined;
     const mounts = shallowRef<Mount[]>([]);
+    let pending: Mount[] = [];
     function adapterOptions(options: CalendarOptions): CalendarOptions {
-      let pending: Mount[] = [];
       return {
         ...options,
-        onBeforeRender: () => {
-          pending = [];
-          options.onBeforeRender?.();
+        onBeforeRender: (context) => {
+          if (!context.partial) pending = [];
+          options.onBeforeRender?.(context);
         },
         onRender: () => {
           pending = pending.filter((mount) => host.value?.contains(mount.node));

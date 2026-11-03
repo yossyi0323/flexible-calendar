@@ -16,6 +16,12 @@ import {
 } from "../core/index.js";
 import { applyStyle, element, englishMessages, setContent } from "./helpers.js";
 import type { CalendarContext } from "./context.js";
+import { captureFocus } from "./focus.js";
+import {
+  changedTimeColumns,
+  patchTimeColumns,
+  snapshotEvents,
+} from "./time-update.js";
 import { validateOptions } from "./options.js";
 import type { CalendarHandle, CalendarOptions } from "./types.js";
 import { toolbar } from "./toolbar.js";
@@ -40,6 +46,7 @@ export function createCalendar<E extends CalendarEvent>(
   let scroller: HTMLElement;
   let live: HTMLElement;
   let destroyed = false;
+  let eventSnapshots = snapshotEvents(options.events);
   const viewCleanups: (() => void)[] = [];
   let pendingOptions: CalendarOptions<E> | undefined;
   let eventIndex: Map<DateKey, Segment<E>[]> | undefined;
@@ -173,13 +180,29 @@ export function createCalendar<E extends CalendarEvent>(
         cell.append(line);
       }
   }
-  function render() {
+  function render(previous?: CalendarOptions<E>) {
     if (destroyed) return;
+    const snapshots = snapshotEvents(options.events);
+    const changed = previous
+      ? changedTimeColumns(previous, options, eventSnapshots, snapshots)
+      : null;
+    const restoreFocus = captureFocus(root);
     pointer.stopGesture();
+    if (changed) {
+      eventIndex = undefined;
+      backgroundIndex = undefined;
+      options.onBeforeRender?.({ partial: true });
+      patchTimeColumns(ctx, changed);
+      updateNow();
+      restoreFocus();
+      eventSnapshots = snapshots;
+      options.onRender?.();
+      return;
+    }
     for (const cleanup of viewCleanups.splice(0)) cleanup();
     eventIndex = undefined;
     backgroundIndex = undefined;
-    options.onBeforeRender?.();
+    options.onBeforeRender?.({ partial: false });
     if (renderedView && scroller)
       scrollPositions.set(renderedView, {
         top: scroller.scrollTop,
@@ -196,11 +219,6 @@ export function createCalendar<E extends CalendarEvent>(
       left: 0,
     };
     renderedView = view();
-    const focused = root.contains(doc.activeElement)
-      ? (doc.activeElement as HTMLElement)
-      : null;
-    const focusEvent = focused?.dataset.eventId,
-      focusColumn = focused?.dataset.columnKey;
     root.replaceChildren();
     root.dataset.theme = options.theme ?? "auto";
     root.dataset.touchSelection = String(options.touchSelection ?? false);
@@ -234,18 +252,8 @@ export function createCalendar<E extends CalendarEvent>(
     else timeView(ctx);
     scroller.scrollTop = top;
     scroller.scrollLeft = left;
-    if (focusEvent)
-      [...root.querySelectorAll<HTMLElement>("[data-event-id]")]
-        .find((n) => n.dataset.eventId === focusEvent)
-        ?.focus({ preventScroll: true });
-    else if (focusColumn)
-      [...root.querySelectorAll<HTMLElement>("[data-column-key]")]
-        .find(
-          (n) =>
-            n.dataset.columnKey === focusColumn &&
-            n.classList.contains("fc-time-column"),
-        )
-        ?.focus({ preventScroll: true });
+    restoreFocus();
+    eventSnapshots = snapshots;
     options.onRender?.();
     const range = dates();
     const signature = `${view()}/${tz()}/${range[0]}/${range.at(-1)}`;
@@ -340,9 +348,10 @@ export function createCalendar<E extends CalendarEvent>(
     scrollToTime(options.scrollToMinute);
   function flushUpdates() {
     if (!pendingOptions || destroyed) return;
+    const previous = options;
     options = pendingOptions;
     pendingOptions = undefined;
-    render();
+    render(previous);
   }
   function applyOptions(next: CalendarOptions<E>) {
     validateOptions(next);
@@ -365,8 +374,9 @@ export function createCalendar<E extends CalendarEvent>(
       return;
     }
     pendingOptions = undefined;
+    const previous = options;
     options = next;
-    render();
+    render(previous);
   }
   return {
     update(next) {

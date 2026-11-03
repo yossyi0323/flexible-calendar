@@ -83,7 +83,7 @@ export interface CalendarOptions<
   backgroundEvents?: readonly E[];
   now?: () => Date;
   /** DOM lifecycle hooks, used by framework adapters to manage content mounts. */
-  onBeforeRender?: () => void;
+  onBeforeRender?: (context: { partial: boolean }) => void;
   onRender?: () => void;
   renderEvent?: (event: E, context: { view: View; date: DateKey }) => Content;
   renderColumnHeader?: (column: Column) => Content;

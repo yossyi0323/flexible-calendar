@@ -4,13 +4,13 @@ import {
   layoutSegments,
   matchesResource,
   type CalendarEvent,
+  type Column,
 } from "../core/index.js";
 import { applyStyle, button, element, setContent } from "./helpers.js";
 import type { CalendarContext } from "./context.js";
 export function timeView<E extends CalendarEvent>(ctx: CalendarContext<E>) {
   const {
     options,
-    segmentsForDay,
     doc,
     scroller,
     tz,
@@ -21,13 +21,7 @@ export function timeView<E extends CalendarEvent>(ctx: CalendarContext<E>) {
     dayLabel,
     timeLabel,
     drillDown,
-    eventNode,
     decorateDay,
-    setHitData,
-    position,
-    showKeyboardCursor,
-    slotKeyboard,
-    dayKeyboard,
     updateNow,
   } = ctx;
   const columns = buildColumns(options);
@@ -60,25 +54,7 @@ export function timeView<E extends CalendarEvent>(ctx: CalendarContext<E>) {
   }
   const allDay = element(doc, "div", "fc-all-day-row");
   allDay.append(element(doc, "div", "fc-gutter", messages().allDay));
-  for (const column of columns) {
-    const cell = element(doc, "div", "fc-all-day-cell");
-    setHitData(cell, column, true);
-    decorateDay(cell, column.date);
-    if (options.selectable !== false) {
-      cell.tabIndex = 0;
-      cell.setAttribute("role", "group");
-      cell.setAttribute(
-        "aria-label",
-        `${dayLabel(column.date)} ${column.title} ${messages().allDay}`,
-      );
-      cell.addEventListener("keydown", (e) => dayKeyboard(e, column));
-    }
-    for (const event of segmentsForDay(column.date)
-      .map((s) => s.event)
-      .filter((e) => e.allDay && matchesResource(e, column.resourceId)))
-      cell.append(eventNode(event, column.date));
-    allDay.append(cell);
-  }
+  for (const column of columns) allDay.append(renderAllDayCell(ctx, column));
   const body = element(doc, "div", "fc-time-body");
   const height = ((max() - min()) / 60) * (options.hourHeight ?? 64);
   body.style.height = `${height}px`;
@@ -98,79 +74,133 @@ export function timeView<E extends CalendarEvent>(ctx: CalendarContext<E>) {
     gutter.append(label);
   }
   body.append(gutter);
-  for (const column of columns) {
-    const cell = element(doc, "div", "fc-time-column");
-    setHitData(cell, column, false);
-    decorateDay(cell, column.date);
-    applyStyle(cell, options.columnStyle?.(column));
-    if (options.selectable !== false) {
-      cell.tabIndex = 0;
-      cell.setAttribute("role", "group");
-      cell.setAttribute(
-        "aria-label",
-        `${dayLabel(column.date)} ${column.title}; arrow keys choose time, Enter selects`,
-      );
-      cell.addEventListener("keydown", (e) => slotKeyboard(e, column, cell));
-      cell.addEventListener("focus", () => showKeyboardCursor(cell, column));
-      cell.addEventListener("blur", () =>
-        cell.querySelector(".fc-keyboard-cursor")?.remove(),
-      );
-    }
-    const segments = segmentsForDay(column.date)
-      .filter(
-        (s) => !s.event.allDay && matchesResource(s.event, column.resourceId),
-      )
-      .map((s) => ({
-        ...s,
-        startMinute: Math.max(min(), s.startMinute),
-        endMinute: Math.min(
-          max(),
-          s.endMinute <= s.startMinute ? s.startMinute + step() : s.endMinute,
-        ),
-      }))
-      .filter((s) => s.startMinute < s.endMinute);
-    for (const s of segmentsForDay(column.date, true).filter((s) =>
-      matchesResource(s.event, column.resourceId),
-    )) {
-      const node = element(doc, "div", "fc-background-event");
-      node.setAttribute("aria-hidden", "true");
-      if (s.event.color) node.style.backgroundColor = s.event.color;
-      position(
-        node,
-        Math.max(min(), s.startMinute),
-        Math.min(max(), s.endMinute),
-      );
-      cell.append(node);
-    }
-    const positioned =
-      typeof options.dayLayoutAlgorithm === "function"
-        ? options.dayLayoutAlgorithm(segments)
-        : layoutSegments(segments);
-    for (const segment of positioned) {
-      const width =
-        options.dayLayoutAlgorithm === "overlap"
-          ? Math.min(1 - segment.left, segment.width * 1.7)
-          : segment.width;
-      const node = eventNode(segment.event, column.date, true);
-      node.classList.add("fc-timed-event");
-      position(node, segment.startMinute, segment.endMinute);
-      node.style.insetInlineStart = `${segment.left * 100}%`;
-      node.style.width = `calc(${width * 100}% - 3px)`;
-      if (segment.continuesBefore) {
-        node.classList.add("fc-continues-before");
-        node.querySelector('[data-edge="start"]')?.remove();
-      }
-      if (segment.continuesAfter) {
-        node.classList.add("fc-continues-after");
-        node.querySelector('[data-edge="end"]')?.remove();
-      }
-      cell.append(node);
-    }
-    body.append(cell);
-  }
+  for (const column of columns) body.append(renderTimeColumn(ctx, column));
   const sticky = element(doc, "div", "fc-sticky-head");
   sticky.append(header, allDay);
   canvas.append(sticky, body);
   scroller.append(canvas);
   updateNow();
+}
+
+export function renderAllDayCell<E extends CalendarEvent>(
+  ctx: CalendarContext<E>,
+  column: Column,
+) {
+  const {
+    options,
+    doc,
+    messages,
+    dayLabel,
+    eventNode,
+    decorateDay,
+    setHitData,
+    dayKeyboard,
+    segmentsForDay,
+  } = ctx;
+  const cell = element(doc, "div", "fc-all-day-cell");
+  setHitData(cell, column, true);
+  decorateDay(cell, column.date);
+  if (options.selectable !== false) {
+    cell.tabIndex = 0;
+    cell.setAttribute("role", "group");
+    cell.setAttribute(
+      "aria-label",
+      `${dayLabel(column.date)} ${column.title} ${messages().allDay}`,
+    );
+    cell.addEventListener("keydown", (e) => dayKeyboard(e, column));
+  }
+  for (const event of segmentsForDay(column.date)
+    .map((s) => s.event)
+    .filter((e) => e.allDay && matchesResource(e, column.resourceId)))
+    cell.append(eventNode(event, column.date));
+  return cell;
+}
+
+export function renderTimeColumn<E extends CalendarEvent>(
+  ctx: CalendarContext<E>,
+  column: Column,
+) {
+  const {
+    options,
+    doc,
+    step,
+    min,
+    max,
+    dayLabel,
+    eventNode,
+    decorateDay,
+    setHitData,
+    position,
+    showKeyboardCursor,
+    slotKeyboard,
+    segmentsForDay,
+  } = ctx;
+  const cell = element(doc, "div", "fc-time-column");
+  setHitData(cell, column, false);
+  decorateDay(cell, column.date);
+  applyStyle(cell, options.columnStyle?.(column));
+  if (options.selectable !== false) {
+    cell.tabIndex = 0;
+    cell.setAttribute("role", "group");
+    cell.setAttribute(
+      "aria-label",
+      `${dayLabel(column.date)} ${column.title}; arrow keys choose time, Enter selects`,
+    );
+    cell.addEventListener("keydown", (e) => slotKeyboard(e, column, cell));
+    cell.addEventListener("focus", () => showKeyboardCursor(cell, column));
+    cell.addEventListener("blur", () =>
+      cell.querySelector(".fc-keyboard-cursor")?.remove(),
+    );
+  }
+  const segments = segmentsForDay(column.date)
+    .filter(
+      (s) => !s.event.allDay && matchesResource(s.event, column.resourceId),
+    )
+    .map((s) => ({
+      ...s,
+      startMinute: Math.max(min(), s.startMinute),
+      endMinute: Math.min(
+        max(),
+        s.endMinute <= s.startMinute ? s.startMinute + step() : s.endMinute,
+      ),
+    }))
+    .filter((s) => s.startMinute < s.endMinute);
+  for (const s of segmentsForDay(column.date, true).filter((s) =>
+    matchesResource(s.event, column.resourceId),
+  )) {
+    const node = element(doc, "div", "fc-background-event");
+    node.setAttribute("aria-hidden", "true");
+    if (s.event.color) node.style.backgroundColor = s.event.color;
+    position(
+      node,
+      Math.max(min(), s.startMinute),
+      Math.min(max(), s.endMinute),
+    );
+    cell.append(node);
+  }
+  const positioned =
+    typeof options.dayLayoutAlgorithm === "function"
+      ? options.dayLayoutAlgorithm(segments)
+      : layoutSegments(segments);
+  for (const segment of positioned) {
+    const width =
+      options.dayLayoutAlgorithm === "overlap"
+        ? Math.min(1 - segment.left, segment.width * 1.7)
+        : segment.width;
+    const node = eventNode(segment.event, column.date, true);
+    node.classList.add("fc-timed-event");
+    position(node, segment.startMinute, segment.endMinute);
+    node.style.insetInlineStart = `${segment.left * 100}%`;
+    node.style.width = `calc(${width * 100}% - 3px)`;
+    if (segment.continuesBefore) {
+      node.classList.add("fc-continues-before");
+      node.querySelector('[data-edge="start"]')?.remove();
+    }
+    if (segment.continuesAfter) {
+      node.classList.add("fc-continues-after");
+      node.querySelector('[data-edge="end"]')?.remove();
+    }
+    cell.append(node);
+  }
+  return cell;
 }

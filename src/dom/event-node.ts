@@ -21,7 +21,7 @@ export function eventNode<E extends CalendarEvent>(
     doc,
     "",
     (source) => {
-      if (!isClickSuppressed()) options.onSelectEvent?.(event, source);
+      if (!isClickSuppressed()) ctx.options.onSelectEvent?.(event, source);
     },
     "fc-event",
   );
@@ -53,7 +53,7 @@ export function eventNode<E extends CalendarEvent>(
   }
   node.append(body);
   node.addEventListener("dblclick", (source) =>
-    options.onDoubleClickEvent?.(event, source),
+    ctx.options.onDoubleClickEvent?.(event, source),
   );
   node.addEventListener("keydown", (source) =>
     eventKeyboard(source, event, date),
