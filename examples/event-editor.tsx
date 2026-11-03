@@ -8,7 +8,7 @@ import {
   type CalendarEvent,
   type Resource,
 } from "../src/core/index.js";
-import { DateTimeField } from "./date-time-field.js";
+import { DateTimePicker } from "./date-time-picker.js";
 import { Button } from "./ui/button.js";
 import { Input } from "./ui/input.js";
 import { Label } from "./ui/label.js";
@@ -161,30 +161,17 @@ export function EventEditor({
             />
             All day
           </Label>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <DateTimeField
-              id="event-start"
-              label="Start"
-              value={start}
-              allDay={allDay}
-              invalid={!!error}
-              onChange={(value) => {
-                setStart(value);
-                setError("");
-              }}
-            />
-            <DateTimeField
-              id="event-end"
-              label="End"
-              value={end}
-              allDay={allDay}
-              invalid={!!error}
-              onChange={(value) => {
-                setEnd(value);
-                setError("");
-              }}
-            />
-          </div>
+          <DateTimePicker
+            start={start}
+            end={end}
+            allDay={allDay}
+            invalid={!!error}
+            onChange={(nextStart, nextEnd) => {
+              setStart(nextStart);
+              setEnd(nextEnd);
+              setError("");
+            }}
+          />
           {resources.length > 0 && (
             <div className="grid gap-2">
               <Label htmlFor="event-resource">Column</Label>

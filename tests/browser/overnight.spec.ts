@@ -23,6 +23,8 @@ async function extend(page: Page, until: number) {
   await expect
     .poll(() => scroller.evaluate((n) => n.scrollTop))
     .toBeGreaterThan(before + 200);
+  // Leave the auto-scroll edge before measuring the final pointer coordinate.
+  await page.mouse.move(x, box!.y + box!.height / 2);
   // Stop at the desired wall time after the pointer-driven scroll exposes it.
   const target = await point(page, until);
   await page.mouse.move(target.x, target.y, { steps: 2 });
@@ -94,7 +96,9 @@ test("selection can continue downward into next-day 02:00", async ({
   await page.mouse.move(a.x, a.y);
   await page.mouse.down();
   await extend(page, 1560);
-  await expect(page.locator("#event-start")).toHaveValue("2026-11-03");
+  await expect(
+    page.locator("#event-schedule button[data-selected-single=true]"),
+  ).toHaveText("3");
   await expect(page.locator("#event-start-time")).toHaveValue("23:00");
   await expect(page.locator("#event-end")).toHaveValue("2026-11-04");
   await expect(page.locator("#event-end-time")).toHaveValue("02:00");

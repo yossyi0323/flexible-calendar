@@ -27,3 +27,5 @@
 Private development preview; no npm release has been made.
 
 - Drag and resize previews retain the source timed event’s overlap-lane width and inline position, including RTL and cross-column moves.
+
+- Use the official shadcn date-and-time picker composition with native time inputs and an optional end date for overnight events.

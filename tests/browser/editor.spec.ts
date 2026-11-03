@@ -6,7 +6,10 @@ declare global {
     demoCalendar: CalendarHandle;
   }
 }
-test.use({ timezoneId: "America/New_York" });
+test.use({
+  timezoneId: "America/New_York",
+  viewport: { width: 1280, height: 1000 },
+});
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".fc-calendar")).toBeVisible();
@@ -15,10 +18,12 @@ test("edits exact dates and times in the calendar zone, including overnight even
   page,
 }) => {
   await page.locator('[data-event-id="2"]').click();
-  await expect(page.locator("#event-start")).toHaveValue("2026-11-03");
+  await expect(
+    page.locator("#event-schedule button[data-selected-single=true]"),
+  ).toHaveText("3");
   await expect(page.locator("#event-start-time")).toHaveValue("09:15");
-  await page.locator("#event-start").fill("2026-11-03");
   await page.locator("#event-start-time").fill("23:10");
+  await page.locator("#event-different-end").check();
   await page.locator("#event-end").fill("2026-11-04");
   await page.locator("#event-end-time").fill("01:25");
   await page.locator("#save").click();
@@ -37,7 +42,6 @@ test("rejects reversed intervals without closing or changing the event", async (
   page,
 }) => {
   await page.locator('[data-event-id="2"]').click();
-  await page.locator("#event-end").fill("2026-11-03");
   await page.locator("#event-end-time").fill("08:00");
   await page.locator("#save").click();
   await expect(page.getByRole("alert")).toHaveText("End must be after start.");
@@ -58,9 +62,7 @@ test("new events accept typed times independently of the selection interval", as
   await page.locator(".fc-time-column").nth(1).focus();
   await page.keyboard.press("Enter");
   await page.locator("#event-title").fill("Typed schedule");
-  await page.locator("#event-start").fill("2026-11-03");
   await page.locator("#event-start-time").fill("12:07");
-  await page.locator("#event-end").fill("2026-11-03");
   await page.locator("#event-end-time").fill("12:42");
   await page.locator("#save").click();
   expect(
@@ -76,7 +78,10 @@ test("all-day date input uses an inclusive end without changing the exclusive ev
   page,
 }) => {
   await page.locator('[data-event-id="6"]').click();
-  await expect(page.locator("#event-start")).toHaveValue("2026-11-04");
+  await expect(
+    page.locator("#event-schedule button[data-selected-single=true]"),
+  ).toHaveText("4");
+  await page.locator("#event-different-end").check();
   await expect(page.locator("#event-end")).toHaveValue("2026-11-04");
   await page.locator("#event-end").fill("2026-11-05");
   await page.locator("#save").click();
@@ -124,9 +129,10 @@ test("shadcn calendar selects a date and keeps typed time in the calendar zone",
   await page.locator('[data-event-id="2"]').click();
   await expect(
     page.locator(
-      '#editor input[type="datetime-local"], #editor input[type="date"], #editor input[type="time"]',
+      '#editor input[type="datetime-local"], #editor input[type="date"]',
     ),
   ).toHaveCount(0);
+  await page.locator("#event-different-end").check();
   await page
     .getByRole("button", { name: "Choose end date", exact: true })
     .click();
@@ -153,16 +159,17 @@ for (const theme of ["light", "dark"])
   }, testInfo) => {
     await page.selectOption("#theme", theme);
     await page.locator('[data-event-id="2"]').click();
+    await page.locator("#event-different-end").check();
     await page
-      .getByRole("button", { name: "Choose start date", exact: true })
+      .getByRole("button", { name: "Choose end date", exact: true })
       .click();
-    const popup = page.locator("#event-start-popover");
+    const popup = page.locator("#event-end-popover");
     await expect(popup).toBeVisible();
     await popup.evaluate(async (n) => {
       await Promise.all(n.getAnimations().map((a) => a.finished));
     });
     const result = await new AxeBuilder({ page })
-      .include("#event-start-popover")
+      .include("#event-end-popover")
       .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
       .analyze();
     expect(
@@ -178,6 +185,31 @@ for (const theme of ["light", "dark"])
     await expect(popup).not.toBeVisible();
     await expect(page.locator("#editor")).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Choose start date", exact: true }),
+      page.getByRole("button", { name: "Choose end date", exact: true }),
     ).toBeFocused();
   });
+
+test("official time fields use native segments and a shared calendar preserves the time interval", async ({
+  page,
+}) => {
+  await page.locator('[data-event-id="2"]').click();
+  await expect(page.locator('#editor input[type="time"]')).toHaveCount(2);
+  await expect(page.locator('#editor input[type="number"]')).toHaveCount(0);
+  await expect(page.locator("#event-start-time")).toHaveAttribute("step", "60");
+  await page
+    .locator("#event-schedule")
+    .getByRole("button", { name: /Thursday, November 5th, 2026/ })
+    .click();
+  await page.locator("#save").click();
+  expect(
+    await page.evaluate(() => {
+      const e = window.demoCalendar
+        .getOptions()
+        .events.find((e) => e.id === "2")!;
+      return [e.start.toISOString(), e.end.toISOString()];
+    }),
+  ).toEqual(["2026-11-05T00:15:00.000Z", "2026-11-05T01:15:00.000Z"]);
+  await page.locator('[data-event-id="2"]').click();
+  await page.locator("#event-all-day").check();
+  await expect(page.locator('#editor input[type="time"]')).toHaveCount(0);
+});

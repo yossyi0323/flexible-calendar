@@ -93,27 +93,6 @@ export function DateTimeField({
           </PopoverContent>
         </Popover>
       </div>
-      {!allDay && (
-        <>
-          <Label htmlFor={`${id}-time`} className="sr-only">
-            {label} time
-          </Label>
-          <Input
-            id={`${id}-time`}
-            type="text"
-            inputMode="numeric"
-            value={time}
-            onChange={(e) => onChange(`${date}T${e.target.value}`)}
-            placeholder="HH:mm"
-            pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
-            maxLength={5}
-            required
-            aria-invalid={invalid}
-            aria-describedby={invalid ? "event-error" : undefined}
-            className="tabular-nums"
-          />
-        </>
-      )}
     </fieldset>
   );
 }
