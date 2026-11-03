@@ -85,3 +85,21 @@ test("resource moves replace source and destination and deletion removes all fra
   });
   await expect(page.locator('[data-event-id="5"]')).toHaveCount(0);
 });
+
+test("reordering equal-time all-day events updates their displayed order", async ({
+  page,
+}) => {
+  expect(
+    await page.evaluate(() => {
+      const c = window.demoCalendar;
+      const original = c.getOptions().events.find((e) => e.id === "6")!;
+      const a = { ...original, id: "order-a" },
+        b = { ...original, id: "order-b" };
+      c.update({ events: [a, b] });
+      c.update({ events: [b, a] });
+      return [
+        ...document.querySelectorAll<HTMLElement>(".fc-all-day-cell .fc-event"),
+      ].map((e) => e.dataset.eventId);
+    }),
+  ).toEqual(["order-b", "order-a"]);
+});

@@ -15,15 +15,17 @@ export interface EventSnapshot<E extends CalendarEvent> {
   end: number;
   resources: readonly string[];
   fingerprint: string;
+  index: number;
 }
 export function snapshotEvents<E extends CalendarEvent>(
   events: readonly E[],
 ): Map<string, EventSnapshot<E>> {
   return new Map(
-    events.map((event) => [
+    events.map((event, index) => [
       event.id,
       {
         event,
+        index,
         start: +event.start,
         end: +event.end,
         resources: [...eventResourceIds(event)],
@@ -84,7 +86,12 @@ export function changedTimeColumns<E extends CalendarEvent>(
   for (const id of new Set([...before.keys(), ...after.keys()])) {
     const a = before.get(id),
       b = after.get(id);
-    if (a?.event === b?.event && a?.fingerprint === b?.fingerprint) continue;
+    if (
+      a?.event === b?.event &&
+      a?.fingerprint === b?.fingerprint &&
+      a?.index === b?.index
+    )
+      continue;
     if (a) touched.push(a);
     if (b) touched.push(b);
   }

@@ -123,7 +123,6 @@ export function createPointerController<E extends CalendarEvent>(
     raf = win.requestAnimationFrame(autoScroll);
   }
   function pointerMove(e: PointerEvent) {
-    const {} = ctx;
     if (!gesture || gesture.id !== e.pointerId) return;
     gesture.lastX = e.clientX;
     gesture.lastY = e.clientY;
@@ -245,7 +244,6 @@ export function createPointerController<E extends CalendarEvent>(
     g.current.node.append(preview);
   }
   function stopGesture() {
-    const {} = ctx;
     const active = gesture;
     gesture = undefined;
     if (active && active.capture.hasPointerCapture(active.id))
