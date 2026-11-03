@@ -1,6 +1,6 @@
 # Release procedure
 
-The owner will review this work before any public release. Keep the repository private and `package.json` private until that decision. There is no publishing workflow, token, deployment or automatic visibility change in this repository.
+The source is public on GitHub. The npm package stays private until the owner approves a registry release.
 
 1. Review [features and differences](features.md), [date semantics](dates.md) and [verification](verification.md). Try all views in light/dark themes, keyboard operation and the intended touch devices.
 2. Run `npm ci`, `npm run format:check`, `npm run check`, `npm run test:package`, and the browser suite after `npx playwright install`.

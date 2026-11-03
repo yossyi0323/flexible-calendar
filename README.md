@@ -1,8 +1,8 @@
 # Flexible Calendar
 
-A TypeScript calendar with a framework-independent engine and DOM renderer, plus React and Vue adapters. Ordinary day, week, work-week, month and agenda views sit alongside a native **date × resource vertical view**. Events always retain their real timestamps and IDs.
+A TypeScript calendar for plain DOM, React and Vue. Show **multiple columns for each date** to compare planned and actual time, people or rooms side by side. An event keeps its ID and timestamps even when it spans midnight. Day, week, work-week, month and agenda views use the same event data.
 
-**Status: 0.1.0 development preview.** The API may change before 1.0. Nothing has been published to npm. `private: true` intentionally prevents accidental publication. The package name in examples is the intended package name; use the local tarball until a release exists.
+**Version 0.1.0 · MIT.** The API may change before 1.0. Until the first npm release, you can [run the playground or build an installable tarball](#try-it-locally).
 
 ![Dark vertical calendar with real dates and Plan/Do columns](docs/images/vertical-dark.png)
 
@@ -27,6 +27,8 @@ See [API](docs/api.md), [feature comparison](docs/features.md), [date/time behav
 Requires Node.js 20.19+ (or 22.12+) and npm.
 
 ```sh
+git clone https://github.com/yossyi0323/flexible-calendar.git
+cd flexible-calendar
 npm ci
 npm run dev
 ```

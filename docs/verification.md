@@ -56,7 +56,7 @@ The saved images were captured from the functioning playground; they are not moc
 - Recurrence, persistence, consumer-specific editors and optimistic updates belong to the consumer and are not certified by these tests. The included playground editor is an in-memory example.
 - The renderer is not virtualized; the test of 1,000 layout intervals is not a throughput or browser memory guarantee for arbitrarily large schedules.
 - [Feature differences](features.md) and [DST behavior](dates.md) are explicit preview constraints. Time-view all-day events remain daily fragments, and the time axis does not duplicate DST fall-back hours.
-- Repository visibility remains private and `private: true` blocks npm publication. Publication requires the owner's separate review.
+- The source is available on GitHub. The package retains `private: true` until the owner approves publication to npm.
 
 CI repeats formatting, type/unit/build checks, package-consumer validation and the browser suite. Local browser binaries used for this run were temporary test dependencies; no user browser profile or global Mac configuration was modified.
 
