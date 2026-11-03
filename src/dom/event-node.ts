@@ -58,7 +58,8 @@ export function eventNode<E extends CalendarEvent>(
   node.addEventListener("keydown", (source) =>
     eventKeyboard(source, event, date),
   );
-  if (canEdit(event)) {
+  // Agenda rows have no spatial time axis for pointer moves or resizing.
+  if (canEdit(event) && view() !== "agenda") {
     node.classList.add("fc-editable");
     if (options.resizable !== false)
       for (const edge of ["start", "end"] as const) {

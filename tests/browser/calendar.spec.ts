@@ -497,3 +497,29 @@ test("a concurrent change to the dragged event cancels a stale gesture", async (
     ),
   ).toBe("2026-11-03T00:16:00.000Z");
 });
+
+test("agenda rows have no pointer resize handles and still open the editor", async ({
+  page,
+}) => {
+  await page.getByRole("button", { name: "Agenda", exact: true }).click();
+  await expect(page.locator(".fc-agenda .fc-event")).not.toHaveCount(0);
+  await expect(page.locator(".fc-agenda .fc-resize")).toHaveCount(0);
+  await expect(page.locator(".fc-agenda .fc-editable")).toHaveCount(0);
+  const event = page.locator('.fc-agenda [data-event-id="2"]');
+  await event.hover();
+  await expect(event).not.toHaveCSS("cursor", "grab");
+  await event.click();
+  await expect(page.locator("#editor")).toBeVisible();
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(event).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#editor")).toBeVisible();
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await page.getByRole("button", { name: "Vertical", exact: true }).click();
+  await expect(
+    page.locator('.fc-timed-event [data-edge="start"]').first(),
+  ).toBeAttached();
+  await expect(
+    page.locator('.fc-timed-event [data-edge="end"]').first(),
+  ).toBeAttached();
+});

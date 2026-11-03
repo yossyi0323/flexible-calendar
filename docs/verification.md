@@ -61,3 +61,5 @@ The saved images were captured from the functioning playground; they are not moc
 CI repeats formatting, type/unit/build checks, package-consumer validation and the browser suite. Local browser binaries used for this run were temporary test dependencies; no user browser profile or global Mac configuration was modified.
 
 Horizontal scroll regression tests check all three gutter positions, column alignment and hit testing in LTR/RTL after simultaneous vertical/horizontal scrolling. A dense all-day fixture verifies cell overflow remains scrollable.
+
+After the Agenda handle fix, the calendar browser suite passed 87 cases across Chromium, Firefox and WebKit. It verifies Agenda has no resize handles or grab styling, click/Enter still open the editor, and time-view handles remain available.
