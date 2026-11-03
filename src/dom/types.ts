@@ -17,6 +17,7 @@ export interface Messages {
   previous: string;
   next: string;
   allDay: string;
+  timeColumnInstruction?: string;
   noEvents: string;
   day: string;
   week: string;
@@ -25,6 +26,20 @@ export interface Messages {
   agenda: string;
   vertical: string;
   more: (count: number) => string;
+}
+export interface ToolbarContext {
+  date: Date;
+  view: View;
+  label: string;
+  views: readonly View[];
+  navigate: (action: "previous" | "today" | "next") => void;
+  setView: (view: View) => void;
+}
+export interface EventSelectionContext {
+  /** First displayed date of the activated segment, in the calendar time zone. */
+  date: DateKey;
+  /** The event button. Measure during the callback, before any calendar update. */
+  anchor: HTMLButtonElement;
 }
 export interface ElementStyle {
   className?: string;
@@ -35,6 +50,12 @@ export interface CalendarOptions<
 > extends CalendarConfig<E> {
   height?: number | string;
   hourHeight?: number;
+  hideEmptyAllDayRow?: boolean;
+  /** Shared, non-interactive markers positioned in local wall-clock minutes. */
+  timeGutterMarkers?: (columns: readonly Column[]) => readonly {
+    minute: number;
+    content: Content;
+  }[];
   columnWidth?: number;
   theme?: "light" | "dark" | "auto";
   direction?: "ltr" | "rtl";
@@ -52,14 +73,7 @@ export interface CalendarOptions<
       }) => Content
     >
   >;
-  renderToolbar?: (context: {
-    date: Date;
-    view: View;
-    label: string;
-    views: readonly View[];
-    navigate: (action: "previous" | "today" | "next") => void;
-    setView: (view: View) => void;
-  }) => Content;
+  renderToolbar?: (context: ToolbarContext) => Content;
   formats?: {
     time?: (date: Date) => string;
     day?: (date: Date) => string;
@@ -92,7 +106,11 @@ export interface CalendarOptions<
   dayStyle?: (date: DateKey) => ElementStyle;
   onSelectSlot?: (selection: SlotSelection) => void;
   onSelecting?: (selection: SlotSelection) => boolean | void;
-  onSelectEvent?: (event: E, source: MouseEvent | KeyboardEvent) => void;
+  onSelectEvent?: (
+    event: E,
+    source: MouseEvent | KeyboardEvent,
+    context: EventSelectionContext,
+  ) => void;
   onDoubleClickEvent?: (event: E, source: MouseEvent) => void;
   onEventChange?: (change: EventChange<E>) => void;
   /** Return false to reject a move/resize. Events are always controlled by the caller. */

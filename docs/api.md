@@ -69,13 +69,56 @@ When resources are present, time views show events whose resource ID matches the
 - **Styling:** `eventStyle(event)`, `columnStyle(column)`, `dayStyle(dateKey)` return `{ className?, style? }`. Column styling can supply a date-specific gradient without querying private DOM structure.
 - **Lifecycle:** `onBeforeRender({ partial })`, `onRender` let integrations clean up and attach custom content. When `partial` is true, unaffected nodes remain mounted; only dispose content whose nodes were removed. Month popup changes also notify `onRender`. Do not synchronously update calendar options from these hooks; that would trigger recursive rendering.
 
-Custom content sits inside event buttons; avoid nested buttons/links/form controls. `renderReactEvent` and `renderReactColumnHeader` accept React nodes and preserve context. Vue exposes `event` and `columnHeader` slots. DOM render callbacks remain available in both wrappers.
+Custom content sits inside event buttons; avoid nested buttons/links/form controls. `renderReactEvent` and `renderReactColumnHeader` accept React nodes and preserve context. For a JSX toolbar, pass `renderReactToolbar={(context) => <Toolbar {...context} />}`. Its `ToolbarContext` type is exported by the React and DOM entry points. The component can read app providers and use `label`, `date`, `view`, `views`, `navigate("previous" | "today" | "next")` and `setView(view)`. When both toolbar renderers are supplied, the React renderer takes precedence. See [the React example](../examples/react.tsx) for controlled navigation with design-system buttons. Vue exposes `event` and `columnHeader` slots. DOM render callbacks remain available in both wrappers.
+
+A toolbar can use the package’s React entry point directly.
+
+```tsx
+import {
+  Calendar,
+  type ToolbarContext,
+} from "@yossyi0323/flexible-calendar/react";
+
+function ScheduleToolbar({ label, navigate }: ToolbarContext) {
+  return (
+    <nav aria-label="Calendar navigation">
+      <button type="button" onClick={() => navigate("previous")}>
+        Previous
+      </button>
+      <strong>{label}</strong>
+      <button type="button" onClick={() => navigate("next")}>
+        Next
+      </button>
+    </nav>
+  );
+}
+
+// Inside your schedule component
+return (
+  <Calendar
+    {...options}
+    renderReactToolbar={(ctx) => <ScheduleToolbar {...ctx} />}
+  />
+);
+```
 
 ## Callbacks
 
 `onSelectSlot(selection)` receives `{ start, end, resourceId?, allDay, action, box? }`. `action` is `click`, `select` or `keyboard`; pointer selections include viewport `box.clientX/clientY` (also `x/y`). Selection belongs to the resource where the gesture started, even when it spans dates. `onSelecting(selection)` may return false to veto selection and marks the drag preview as invalid.
 
-`onSelectEvent(event, nativeEvent)` and `onDoubleClickEvent` notify activation. Event objects are the original objects even when clicked on a continuation fragment. The native event is not a React SyntheticEvent.
+`onSelectEvent(event, nativeEvent, { date, anchor })` receives the original event, the browser event, and the activated segment. Existing two-argument handlers continue to work. `date` is the first displayed date of that segment in the calendar time zone. `anchor` is its event button, including for keyboard activation or when several columns contain the same event ID. Measure it during the callback, before a render or a month overflow popup closing. `onDoubleClickEvent(event, nativeEvent)` receives a native double-click.
+
+For example, an app can position its editor beside the activated button using viewport coordinates. Enter and Space follow the same path as a click.
+
+```tsx
+<Calendar
+  {...options}
+  onSelectEvent={(event, _source, { date, anchor }) => {
+    const { left, bottom } = anchor.getBoundingClientRect();
+    setEditor({ event, date, style: { position: "fixed", left, top: bottom } });
+  }}
+/>
+```
 
 `onEventChange(change)` receives `{ event, start, end, resourceId?, allDay, action }`. Actions are `move`, `resize-start`, `resize-end`. Both bounds are real instants. The library only proposes a change; call `update({ events })` or update framework state to accept it. When changing to an ungrouped column, an absent `resourceId` means to remove the prior resource ID. `canChangeEvent(change)` may return false to reject it before notification.
 
@@ -110,6 +153,42 @@ Use an empty host element owned by your component. Multiple calendars on the pag
 
 The public theme tokens are `--fc-bg`, `--fc-surface`, `--fc-text`, `--fc-muted`, `--fc-border`, `--fc-accent`, `--fc-today`, `--fc-event-color`, `--fc-event-text`, and `--fc-now`. Set these on `.fc-calendar` or a more specific selector. The stylesheet is entirely `.fc-` scoped. Structural class names are currently an implementation detail; use renderer/style callbacks for application extensions.
 
+### Column shading and timed cards
+
+Return a CSS background from `columnStyle`. The calendar paints its slot lines over the background and scales their spacing with `step` and `hourHeight`.
+
+```ts
+columnStyle: (column) => ({
+  style: {
+    backgroundImage: column.resourceId === "plan"
+      ? "linear-gradient(transparent, color-mix(in srgb, var(--fc-accent) 12%, transparent))"
+      : "none",
+  },
+}),
+eventStyle: () => ({ className: "fc-event-surface schedule-card" }),
+```
+
+The public `fc-event-surface` class enables a separately painted surface on timed cards. `--fc-event-inset` accepts CSS inset shorthand and changes the visible gap while the button retains its calendar position, pointer bounds and keyboard focus outline. Midnight continuation edges follow the inset surface. Use the following tokens on your own class.
+
+```css
+.schedule-card {
+  --fc-event-inset: 1px;
+  --fc-event-fill: var(--fc-surface);
+  --fc-event-surface-text: var(--fc-text);
+  --fc-event-border: 1px solid var(--fc-muted);
+  --fc-event-radius: 4px;
+  --fc-event-hover-filter: none;
+  --fc-event-selection-ring: inset 0 0 0 2px var(--fc-accent);
+  --fc-resize-grip-width: 24px;
+  --fc-resize-grip-thickness: 2px;
+  --fc-resize-grip-color: var(--fc-text);
+}
+```
+
+The selection ring accepts a CSS box-shadow and appears on the event matching `selectedEventId`. The three grip tokens also work on standard timed cards. They style the centered hover indicator at either edge. The pointer target spans the full width and uses up to 7px at each end, capped at 30% of the card height to keep short events selectable.
+
+Choose **Styled schedule** in the playground and switch between light and dark themes. “Research & notes” shares a lane boundary with “Handoff” at 11:00 and overlaps “Design the next chapter” before 10:30. “Across midnight” shows both continuation edges in adjacent dates.
+
 ## Custom views
 
 Register a pure range/navigation definition in `customViews` and its DOM rendering function in `customViewRenderers`, then set `view` to that key. Custom names appear in the default toolbar; `views` can restrict the offered list.
@@ -141,4 +220,22 @@ Event-only updates in time views replace affected date/resource columns and pres
 
 An update during a pointer gesture is queued until completion or cancellation. If the dragged event is removed or its interval/resource changes, the gesture is cancelled and the incoming update is applied. `getOptions()` reports the currently applied options, not the queued options.
 
-When the time grid ends at midnight (`maxMinute: 1440`), starting a timed end-resize or empty-slot pointer selection temporarily adds the following day’s hours below midnight. Continue downward with edge auto-scroll to reach 01:00, 02:00 and later; `+1` labels identify the following day. The extension covers one additional day. Release commits the real next-day instant; Escape cancels and restores the normal axis. Multi-day events still render as date-specific fragments after the gesture, with their original ID. Restricted grids ending earlier than midnight keep their configured bounds.
+When the time grid ends at midnight (`maxMinute: 1440`), starting a timed end-resize or empty-slot pointer selection temporarily adds the following day’s hours below midnight. Continue downward with edge auto-scroll to reach 01:00, 02:00 and later; `+1` labels identify the following day. The extension covers one additional day and shows supplied timed events for each column’s next date and resource, including events that continue across midnight. These temporary event labels do not receive focus or intercept the pointer. Release commits the real next-day instant; Escape cancels and restores the normal axis. Multi-day events still render as date-specific fragments after the gesture, with their original ID. Restricted grids ending earlier than midnight keep their configured bounds. Tab into a column or use its arrow keys to show the keyboard time cursor. Starting a pointer gesture clears that cursor.
+
+## Shared time gutter and all-day row
+
+`timeGutterMarkers(columns)` returns markers for the shared time axis. Supply a local minute and either text or a fresh DOM node per marker. The callback receives the visible date/resource columns on each full render, so an application can choose which date supplies a sunrise or shift boundary. Only minutes in `[minMinute, maxMinute)` appear. Use non-interactive content. For example, this icon inherits the theme text color and has a screen-reader label.
+
+```ts
+timeGutterMarkers: () => {
+  const icon = document.createElement("span");
+  icon.textContent = "☀";
+  icon.setAttribute("role", "img");
+  icon.setAttribute("aria-label", "Shift begins at 07:30");
+  return [{ minute: 450, content: icon }];
+},
+```
+
+Set `hideEmptyAllDayRow: true` to show the all-day row only when a displayed date/resource contains an all-day event. The default keeps empty cells available for slot selection. With the option enabled, offer a “New all-day event” action in your toolbar or editor and add the resulting event to `events`. The row appears when that event is in a visible column.
+
+Use `messages.timeColumnInstruction` to translate the keyboard hint in each selectable timed column's accessible name. The date and resource label precede this hint.

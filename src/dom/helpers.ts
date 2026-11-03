@@ -1,10 +1,11 @@
 import type { Content, ElementStyle, Messages } from "./types.js";
-export const englishMessages: Messages = {
+export const englishMessages: Required<Messages> = {
   today: "Today",
   close: "Close",
   previous: "Previous",
   next: "Next",
   allDay: "All day",
+  timeColumnInstruction: "arrow keys choose time, Enter selects",
   noEvents: "No events in this range",
   day: "Day",
   week: "Week",

@@ -170,6 +170,9 @@
   border-bottom: 1px solid var(--fc-border);
   background: var(--fc-bg);
 }
+.fc-all-day-row.fc-hide-empty:not(:has(.fc-all-day-cell > .fc-event)) {
+  display: none;
+}
 .fc-all-day-cell {
   min-height: 36px;
   position: relative;
@@ -186,6 +189,13 @@
   background: var(--fc-bg);
   z-index: 4;
 }
+.fc-gutter-marker {
+  position: absolute;
+  inset-inline-start: 3px;
+  transform: translateY(-50%);
+  color: var(--fc-text);
+  pointer-events: none;
+}
 .fc-time-label {
   position: absolute;
   inset-inline-end: 8px;
@@ -199,14 +209,20 @@
 .fc-time-column {
   position: relative;
   border-inline-start: 1px solid var(--fc-border);
+  touch-action: none;
+  min-width: 0;
+}
+.fc-time-column::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
   background-image: linear-gradient(
     to bottom,
     var(--fc-border) 1px,
     transparent 1px
   );
   background-size: 100% var(--fc-step-height);
-  touch-action: none;
-  min-width: 0;
 }
 .fc-today {
   background-color: var(--fc-today);
@@ -288,6 +304,66 @@
   border-end-start-radius: 0;
   border-end-end-radius: 0;
   border-bottom: 2px dashed #ffffff99;
+}
+/* Opt in via eventStyle to paint a timed card inside its original pointer bounds. */
+.fc-timed-event.fc-event-surface {
+  isolation: isolate;
+  color: var(--fc-event-surface-text, var(--fc-event-text));
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 4px 8px;
+}
+.fc-event-surface.fc-timed-event::before {
+  content: "";
+  position: absolute;
+  inset: var(--fc-event-inset, 0px);
+  pointer-events: none;
+  z-index: -1;
+  background: var(--fc-event-fill, var(--fc-event-color));
+  border: var(
+    --fc-event-border,
+    1px solid color-mix(in srgb, var(--fc-event-color), #fff 12%)
+  );
+  border-radius: var(--fc-event-radius, 5px);
+}
+.fc-timed-event.fc-event-surface:hover {
+  filter: none;
+}
+.fc-timed-event.fc-event-surface:hover::before {
+  filter: var(--fc-event-hover-filter, brightness(1.1));
+}
+.fc-timed-event.fc-event-surface.fc-selected:not(:focus-visible) {
+  outline: none;
+}
+.fc-timed-event.fc-event-surface.fc-selected::before {
+  box-shadow: var(--fc-event-selection-ring, inset 0 0 0 2px var(--fc-accent));
+}
+.fc-timed-event.fc-event-surface.fc-continues-before::before {
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
+  border-top: 2px dashed currentColor;
+}
+.fc-timed-event.fc-event-surface.fc-continues-after::before {
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+  border-bottom: 2px dashed currentColor;
+}
+.fc-timed-event .fc-resize {
+  height: min(7px, 30%);
+}
+.fc-timed-event .fc-resize:hover {
+  background: transparent;
+}
+.fc-timed-event .fc-resize:hover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: min(100%, var(--fc-resize-grip-width, 100%));
+  height: min(100%, var(--fc-resize-grip-thickness, 100%));
+  background: var(--fc-resize-grip-color, #ffffff40);
+  pointer-events: none;
 }
 .fc-now {
   position: absolute;
@@ -450,6 +526,13 @@
 @media (forced-colors: active) {
   .fc-event {
     border: 1px solid ButtonText;
+  }
+  .fc-timed-event.fc-event-surface::before {
+    border-color: ButtonText;
+  }
+  .fc-timed-event.fc-event-surface.fc-selected::before {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
   }
   .fc-now {
     background: Highlight;

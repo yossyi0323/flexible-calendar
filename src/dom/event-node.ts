@@ -21,7 +21,8 @@ export function eventNode<E extends CalendarEvent>(
     doc,
     "",
     (source) => {
-      if (!isClickSuppressed()) ctx.options.onSelectEvent?.(event, source);
+      if (!isClickSuppressed())
+        ctx.options.onSelectEvent?.(event, source, { date, anchor: node });
     },
     "fc-event",
   );

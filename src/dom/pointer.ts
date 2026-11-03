@@ -132,6 +132,7 @@ export function createPointerController<E extends CalendarEvent>(
         ? +atMinute(hit.column.date, hit.minute, tz()) - +event.start
         : 0,
     };
+    root.querySelector(".fc-keyboard-cursor")?.remove();
     if (!hit.allDay && (!event || edge === "end"))
       overnight = extendOvernightDrag(ctx);
     capture.setPointerCapture(e.pointerId);

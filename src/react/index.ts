@@ -14,6 +14,7 @@ import {
   createCalendar,
   type CalendarHandle,
   type CalendarOptions,
+  type ToolbarContext,
 } from "../dom/index.js";
 import type { CalendarEvent, Column, DateKey, View } from "../core/index.js";
 export interface CalendarProps<
@@ -25,6 +26,7 @@ export interface CalendarProps<
     event: E,
     context: { view: View; date: DateKey },
   ) => ReactNode;
+  renderReactToolbar?: (context: ToolbarContext) => ReactNode;
   renderReactColumnHeader?: (column: Column) => ReactNode;
   /** Receives the imperative instance after mounting, and null on cleanup. */
   calendarRef?: (calendar: CalendarHandle<E> | null) => void;
@@ -55,6 +57,19 @@ export function Calendar<E extends CalendarEvent = CalendarEvent>(
         setMounts([...pending.current]);
         p.onRender?.();
       },
+      ...(p.renderReactToolbar
+        ? {
+            renderToolbar: (context: ToolbarContext) => {
+              const node = host.current!.ownerDocument.createElement("div");
+              pending.current.push({
+                node,
+                content: p.renderReactToolbar!(context),
+                key: "toolbar",
+              });
+              return node;
+            },
+          }
+        : {}),
       ...(p.renderReactEvent
         ? {
             renderEvent: (event: E, context: { view: View; date: DateKey }) => {
@@ -119,5 +134,10 @@ export function Calendar<E extends CalendarEvent = CalendarEvent>(
     ),
   );
 }
-export type { CalendarOptions, CalendarHandle } from "../dom/index.js";
+export type {
+  CalendarOptions,
+  CalendarHandle,
+  ToolbarContext,
+  EventSelectionContext,
+} from "../dom/index.js";
 export type * from "../core/types.js";

@@ -81,3 +81,16 @@
     min-height: 400px;
   }
 }
+
+.demo-card {
+  --fc-event-inset: 1px;
+  --fc-event-fill: var(--fc-surface);
+  --fc-event-surface-text: var(--fc-text);
+  --fc-event-border: 1px solid var(--fc-muted);
+  --fc-event-radius: 4px;
+  --fc-event-hover-filter: none;
+  --fc-event-selection-ring: inset 0 0 0 2px var(--fc-accent);
+  --fc-resize-grip-width: 24px;
+  --fc-resize-grip-thickness: 2px;
+  --fc-resize-grip-color: var(--fc-text);
+}

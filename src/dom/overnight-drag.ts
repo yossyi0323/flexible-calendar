@@ -1,6 +1,12 @@
-import { atMinute, type CalendarEvent } from "../core/index.js";
+import {
+  addDays,
+  atMinute,
+  indexSegments,
+  type CalendarEvent,
+} from "../core/index.js";
 import type { CalendarContext } from "./context.js";
-import { element } from "./helpers.js";
+import { applyStyle, element } from "./helpers.js";
+import { appendTimedEvents } from "./time-view.js";
 
 /** Temporary next-day hours keep a downward drag continuous across midnight. */
 export function extendOvernightDrag<E extends CalendarEvent>(
@@ -29,23 +35,58 @@ export function extendOvernightDrag<E extends CalendarEvent>(
   // One extra day is available during the gesture, including in a single-day view.
   const endMinute = 2880;
   body.style.height = `${originalHeight + 24 * hourHeight}px`;
-  const labels: HTMLElement[] = [];
+  const temporary: HTMLElement[] = [];
+  const dates = ctx.dates();
   for (let minute = 1440; minute < endMinute; minute += 60) {
     const label = element(
       ctx.doc,
       "span",
       "fc-time-label fc-next-day-label",
-      `${ctx.timeLabel(atMinute(ctx.dates()[0]!, minute, ctx.tz()))} +1`,
+      `${ctx.timeLabel(atMinute(dates[0]!, minute, ctx.tz()))} +1`,
     );
     label.style.top = `${((minute - ctx.min()) / 60) * hourHeight}px`;
     gutter.append(label);
-    labels.push(label);
+    temporary.push(label);
+  }
+  const visibleDates = new Set(dates);
+  const outsideView = indexSegments(
+    ctx.options.events,
+    dates
+      .map((date) => addDays(date, 1))
+      .filter((date) => !visibleDates.has(date)),
+    ctx.tz(),
+  );
+  for (const column of body.querySelectorAll<HTMLElement>(".fc-time-column")) {
+    const date = addDays(column.dataset.date!, 1);
+    appendTimedEvents(
+      ctx,
+      column,
+      outsideView.get(date) ?? ctx.segmentsForDay(date),
+      column.dataset.resourceId,
+      0,
+      1440,
+      (event) => {
+        const node = element(ctx.doc, "div", "fc-event fc-next-day-event");
+        node.inert = true;
+        if (event.color)
+          node.style.setProperty("--fc-event-color", event.color);
+        applyStyle(node, ctx.options.eventStyle?.(event));
+        node.style.pointerEvents = "none";
+        node.append(element(ctx.doc, "span", "fc-event-content", event.title));
+        temporary.push(node);
+        return node;
+      },
+      (node, start, end) => {
+        node.style.top = `${originalHeight + (start / 60) * hourHeight}px`;
+        node.style.height = `${((end - start) / 60) * hourHeight}px`;
+      },
+    );
   }
   body.classList.add("fc-overnight-drag");
   return {
     endMinute,
     restore() {
-      for (const label of labels) label.remove();
+      for (const node of temporary) node.remove();
       for (const [node, style] of saved) {
         if (style === null) node.removeAttribute("style");
         else node.setAttribute("style", style);

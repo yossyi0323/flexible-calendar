@@ -21,7 +21,7 @@ export interface CalendarContext<E extends CalendarEvent> {
   step: () => number;
   min: () => number;
   max: () => number;
-  messages: () => Messages;
+  messages: () => Required<Messages>;
   fmt: (date: Date, format: Intl.DateTimeFormatOptions) => string;
   dayLabel: (date: DateKey) => string;
   timeLabel: (date: Date) => string;

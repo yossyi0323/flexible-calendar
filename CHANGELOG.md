@@ -39,3 +39,8 @@ Private development preview; no npm release has been made.
 - Omit pointer resize handles and grab styling from Agenda rows while retaining click and keyboard activation.
 
 - Bound native time input width across platforms, fit the editor to its content, wrap date/time on very narrow screens, constrain calendar popovers to available height and keep the demo usable in landscape.
+
+- Pointer range selection hides the keyboard cursor. Overnight drag extensions show the following day's timed events in their resource columns until release or cancellation.
+- Time-grid columns support translated keyboard instructions (`messages.timeColumnInstruction`), shared `timeGutterMarkers`, and `hideEmptyAllDayRow`. The default still shows the empty all-day row.
+- Column background images now paint beneath the slot lines. The opt-in `fc-event-surface` class separates a timed card's appearance from its hit area, and grip tokens customize the visible resize handles.
+- React's `renderReactToolbar` receives the calendar navigation context. `onSelectEvent` supplies a third argument with the activated segment's date and anchor. Existing two-argument handlers continue to work.

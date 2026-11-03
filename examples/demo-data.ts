@@ -38,6 +38,17 @@ export function seed(scenario: string): CalendarEvent[] {
       ...resource(0),
       color: "#57534e",
     },
+    ...(scenario === "styled"
+      ? [
+          {
+            id: "handoff",
+            title: "Handoff",
+            start: at(11 * 60),
+            end: at(11 * 60 + 15),
+            ...resource(0),
+          },
+        ]
+      : []),
     {
       id: "4",
       title: "Lunch with the team",

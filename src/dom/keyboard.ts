@@ -121,6 +121,7 @@ export function createKeyboardController<E extends CalendarEvent>(
   }
   function showKeyboardCursor(cell: HTMLElement, column: Column) {
     const { doc, tz, step, min, max, timeLabel, position } = ctx;
+    if (ctx.root.classList.contains("fc-interacting")) return;
     cell.querySelector(".fc-keyboard-cursor")?.remove();
     activeMinute = Math.max(min(), Math.min(max() - step(), activeMinute));
     const cursor = element(
@@ -135,7 +136,7 @@ export function createKeyboardController<E extends CalendarEvent>(
   function slotKeyboard(e: KeyboardEvent, column: Column, cell: HTMLElement) {
     const { options, root, tz, step, min, max, timeLabel, announce, emitSlot } =
       ctx;
-    if (e.target !== cell) return;
+    if (e.target !== cell || root.classList.contains("fc-interacting")) return;
     if (
       e.key === "ArrowUp" ||
       e.key === "ArrowDown" ||

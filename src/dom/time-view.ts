@@ -5,6 +5,7 @@ import {
   matchesResource,
   type CalendarEvent,
   type Column,
+  type Segment,
 } from "../core/index.js";
 import { applyStyle, button, element, setContent } from "./helpers.js";
 import type { CalendarContext } from "./context.js";
@@ -53,6 +54,7 @@ export function timeView<E extends CalendarEvent>(ctx: CalendarContext<E>) {
     header.append(cell);
   }
   const allDay = element(doc, "div", "fc-all-day-row");
+  if (options.hideEmptyAllDayRow) allDay.classList.add("fc-hide-empty");
   allDay.append(element(doc, "div", "fc-gutter", messages().allDay));
   for (const column of columns) allDay.append(renderAllDayCell(ctx, column));
   const body = element(doc, "div", "fc-time-body");
@@ -72,6 +74,13 @@ export function timeView<E extends CalendarEvent>(ctx: CalendarContext<E>) {
     );
     label.style.top = `${((minute - min()) / (max() - min())) * 100}%`;
     gutter.append(label);
+  }
+  for (const { minute, content } of options.timeGutterMarkers?.(columns) ??
+    []) {
+    if (!(minute >= min() && minute < max())) continue;
+    const marker = element(doc, "span", "fc-gutter-marker", content);
+    marker.style.top = `${((minute - min()) / 60) * (options.hourHeight ?? 64)}px`;
+    gutter.append(marker);
   }
   body.append(gutter);
   for (const column of columns) body.append(renderTimeColumn(ctx, column));
@@ -123,7 +132,6 @@ export function renderTimeColumn<E extends CalendarEvent>(
   const {
     options,
     doc,
-    step,
     min,
     max,
     dayLabel,
@@ -144,27 +152,16 @@ export function renderTimeColumn<E extends CalendarEvent>(
     cell.setAttribute("role", "group");
     cell.setAttribute(
       "aria-label",
-      `${dayLabel(column.date)} ${column.title}; arrow keys choose time, Enter selects`,
+      `${dayLabel(column.date)} ${column.title}; ${ctx.messages().timeColumnInstruction}`,
     );
     cell.addEventListener("keydown", (e) => slotKeyboard(e, column, cell));
-    cell.addEventListener("focus", () => showKeyboardCursor(cell, column));
+    cell.addEventListener("focus", () => {
+      if (cell.matches(":focus-visible")) showKeyboardCursor(cell, column);
+    });
     cell.addEventListener("blur", () =>
       cell.querySelector(".fc-keyboard-cursor")?.remove(),
     );
   }
-  const segments = segmentsForDay(column.date)
-    .filter(
-      (s) => !s.event.allDay && matchesResource(s.event, column.resourceId),
-    )
-    .map((s) => ({
-      ...s,
-      startMinute: Math.max(min(), s.startMinute),
-      endMinute: Math.min(
-        max(),
-        s.endMinute <= s.startMinute ? s.startMinute + step() : s.endMinute,
-      ),
-    }))
-    .filter((s) => s.startMinute < s.endMinute);
   for (const s of segmentsForDay(column.date, true).filter((s) =>
     matchesResource(s.event, column.resourceId),
   )) {
@@ -178,16 +175,51 @@ export function renderTimeColumn<E extends CalendarEvent>(
     );
     cell.append(node);
   }
+  appendTimedEvents(
+    ctx,
+    cell,
+    segmentsForDay(column.date),
+    column.resourceId,
+    min(),
+    max(),
+    (event) => eventNode(event, column.date, true),
+    position,
+  );
+  return cell;
+}
+
+/** Normal and extended hours share clipping, overlap lanes and continuation edges. */
+export function appendTimedEvents<E extends CalendarEvent>(
+  ctx: CalendarContext<E>,
+  cell: HTMLElement,
+  daySegments: readonly Segment<E>[],
+  resourceId: string | undefined,
+  min: number,
+  max: number,
+  makeNode: (event: E) => HTMLElement,
+  position: (node: HTMLElement, start: number, end: number) => void,
+) {
+  const segments = daySegments
+    .filter((s) => !s.event.allDay && matchesResource(s.event, resourceId))
+    .map((s) => ({
+      ...s,
+      startMinute: Math.max(min, s.startMinute),
+      endMinute: Math.min(
+        max,
+        s.endMinute <= s.startMinute ? s.startMinute + ctx.step() : s.endMinute,
+      ),
+    }))
+    .filter((s) => s.startMinute < s.endMinute);
   const positioned =
-    typeof options.dayLayoutAlgorithm === "function"
-      ? options.dayLayoutAlgorithm(segments)
+    typeof ctx.options.dayLayoutAlgorithm === "function"
+      ? ctx.options.dayLayoutAlgorithm(segments)
       : layoutSegments(segments);
   for (const segment of positioned) {
     const width =
-      options.dayLayoutAlgorithm === "overlap"
+      ctx.options.dayLayoutAlgorithm === "overlap"
         ? Math.min(1 - segment.left, segment.width * 1.7)
         : segment.width;
-    const node = eventNode(segment.event, column.date, true);
+    const node = makeNode(segment.event);
     node.classList.add("fc-timed-event");
     position(node, segment.startMinute, segment.endMinute);
     node.style.insetInlineStart = `${segment.left * 100}%`;
@@ -202,5 +234,4 @@ export function renderTimeColumn<E extends CalendarEvent>(
     }
     cell.append(node);
   }
-  return cell;
 }

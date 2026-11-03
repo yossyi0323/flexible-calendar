@@ -1,12 +1,48 @@
-import { StrictMode, useState } from "react";
+import { createContext, StrictMode, useContext, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Calendar } from "../src/react/index.js";
+import {
+  Calendar,
+  type ToolbarContext,
+  type View,
+} from "../src/react/index.js";
 import { atMinute, type CalendarEvent } from "../src/core/index.js";
 import "../src/dom/style.css";
 import "./demo.css";
+import { Button } from "./ui/button.js";
 const day = "2026-11-03",
   zone = "Asia/Tokyo";
+const NavigationLabels = createContext<{
+  previous: string;
+  next: string;
+} | null>(null);
+function Toolbar({ label, view, views, navigate, setView }: ToolbarContext) {
+  const labels = useContext(NavigationLabels);
+  if (!labels) throw new Error("Toolbar requires navigation labels");
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Button variant="outline" onClick={() => navigate("previous")}>
+        {labels.previous}
+      </Button>
+      <strong aria-live="polite">{label}</strong>
+      <Button variant="outline" onClick={() => navigate("next")}>
+        {labels.next}
+      </Button>
+      {views.map((value) => (
+        <Button
+          key={value}
+          aria-pressed={view === value}
+          variant={view === value ? "default" : "outline"}
+          onClick={() => setView(value)}
+        >
+          {value.charAt(0).toUpperCase() + value.slice(1)}
+        </Button>
+      ))}
+    </div>
+  );
+}
 function App() {
+  const [date, setDate] = useState(() => atMinute(day, 0, zone));
+  const [view, setView] = useState<View>("day");
   const [events, setEvents] = useState<CalendarEvent[]>([
     {
       id: "react-1",
@@ -17,8 +53,12 @@ function App() {
   ]);
   return (
     <Calendar
-      date={atMinute(day, 0, zone)}
-      view="day"
+      date={date}
+      view={view}
+      views={["day", "week"]}
+      onNavigate={setDate}
+      onViewChange={setView}
+      renderReactToolbar={(context) => <Toolbar {...context} />}
       events={events}
       timeZone={zone}
       scrollToMinute={480}
@@ -56,6 +96,8 @@ function App() {
 }
 createRoot(document.querySelector("#app")!).render(
   <StrictMode>
-    <App />
+    <NavigationLabels.Provider value={{ previous: "Previous", next: "Next" }}>
+      <App />
+    </NavigationLabels.Provider>
   </StrictMode>,
 );

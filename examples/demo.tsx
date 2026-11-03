@@ -29,11 +29,8 @@ function App() {
   const [status, setStatus] = useState(
     "Drag to create. Click an event to edit its dates and times.",
   );
-  function edit(event: CalendarEvent, source?: MouseEvent | KeyboardEvent) {
-    focusReturn.current =
-      source?.currentTarget instanceof HTMLElement
-        ? source.currentTarget
-        : (document.activeElement as HTMLElement);
+  function edit(event: CalendarEvent, anchor?: HTMLElement) {
+    focusReturn.current = anchor ?? (document.activeElement as HTMLElement);
     setEditing(event);
   }
   useEffect(() => {
@@ -48,7 +45,7 @@ function App() {
       scrollToMinute: 480,
       theme: "auto",
       now: () => at(640),
-      onSelectEvent: edit,
+      onSelectEvent: (event, _source, { anchor }) => edit(event, anchor),
       onSelectSlot: (slot) =>
         edit({
           id: crypto.randomUUID(),
@@ -136,6 +133,20 @@ function App() {
                 calendar.current?.update({
                   events: events.current,
                   resources: resources(value),
+                  eventStyle: () => ({
+                    className:
+                      value === "styled" ? "fc-event-surface demo-card" : "",
+                  }),
+                  columnStyle: (column) => ({
+                    style:
+                      value === "styled" && column.resourceId === "plan"
+                        ? {
+                            backgroundImage:
+                              "linear-gradient(to bottom, transparent, color-mix(in srgb, var(--fc-accent) 12%, transparent))",
+                          }
+                        : {},
+                  }),
+                  selectedEventId: value === "styled" ? "3" : null,
                 });
               }}
             >
@@ -144,6 +155,7 @@ function App() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="plan">Plan / Do</SelectItem>
+                <SelectItem value="styled">Styled schedule</SelectItem>
                 <SelectItem value="rooms">Meeting rooms</SelectItem>
                 <SelectItem value="plain">Personal calendar</SelectItem>
               </SelectContent>
@@ -183,6 +195,8 @@ function App() {
                           agenda: "予定一覧",
                           vertical: "バーティカル",
                           allDay: "終日",
+                          timeColumnInstruction:
+                            "矢印キーで時刻を選び、Enter キーで確定",
                           noEvents: "予定はありません",
                           more: (n) => `他${n}件`,
                           close: "閉じる",

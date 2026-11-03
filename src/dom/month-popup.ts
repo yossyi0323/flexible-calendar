@@ -32,7 +32,8 @@ export function createMonthPopup<E extends CalendarEvent>(
     for (const event of events) {
       const node = eventNode(event, day);
       node.querySelectorAll(".fc-resize").forEach((handle) => handle.remove());
-      node.addEventListener("click", () => close(false), { capture: true });
+      // Let selection handlers measure the segment while the dialog is open.
+      node.addEventListener("click", () => close(false));
       list.append(node);
     }
     dialog.append(list);
