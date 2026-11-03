@@ -31,7 +31,7 @@ npm ci
 npm run dev
 ```
 
-Open the URL printed by Vite. The playground includes Plan/Do, meeting-room and personal-calendar examples, all views, an in-memory editor, locale and theme controls. React and Vue examples are linked below the playground. No account, database, or environment variables are required.
+Open the URL printed by Vite. The playground includes Plan/Do, meeting-room and personal-calendar examples, all views, a shadcn/ui editor with direct start/end date-time input, all-day dates, column selection, locale and light/dark theme controls. Inputs use the displayed calendar time zone and invalid intervals cannot be saved. React and Vue examples are linked below the playground. No account, database, or environment variables are required.
 
 ```sh
 npm run check                    # typecheck, unit tests, ESM + declaration build

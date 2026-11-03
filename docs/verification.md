@@ -8,7 +8,7 @@ This records checks performed on the 0.1.0 implementation after the review impro
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | Strict TypeScript, including examples and tests | Passed                                                                                                                                |
 | Unit suite                                      | 41 passed                                                                                                                             |
-| Playwright suite                                | 130 passed                                                                                                                            |
+| Playwright suite                                | 148 passed                                                                                                                            |
 | Desktop browser engines                         | Chromium, Firefox, WebKit                                                                                                             |
 | Mobile emulation                                | Pixel 7 / Chromium and iPhone 13 / WebKit                                                                                             |
 | axe WCAG 2 A/AA and 2.1 A/AA rules              | No automatic violations in sampled vertical, month and agenda views, in light and dark themes, on all three desktop engines           |
@@ -34,19 +34,23 @@ Additional regressions cover continuous month bars and exclusive ends, 4–6 wee
 
 [Browser benchmarks](performance.md) measure 100, 500 and 2,000 events on the same machine before and after the changes.
 
+The playground editor is tested for typed minute-level times, overnight dates, invalid intervals, cancellation/focus return, inclusive all-day end dates and light/dark accessibility. Browser time zone is set to America/New_York while the calendar uses Asia/Tokyo to verify that input does not depend on the device zone.
+
 ## Visual review
 
-The saved images were captured from the functioning playground; they are not mockups. Light and dark vertical views and dark month were inspected for clipping, legibility, headers and event placement.
+The saved images were captured from the functioning playground; they are not mockups. Light and dark vertical views, dark month and the shadcn/ui date-time editor were inspected for clipping, legibility, headers and event placement.
 
 - [Dark vertical](images/vertical-dark.png)
 - [Light vertical](images/vertical-light.png)
 - [Dark month](images/month-dark.png)
+- [Date-time editor, dark](images/editor-dark.png)
+- [Date-time editor, light](images/editor-light.png)
 
 ## Remaining review boundaries
 
 - Physical iPhone/Android hardware and manual screen-reader testing have not been performed. Automated accessibility scans are not a WCAG certification.
 - No existing application's authentication, API, database or production data was involved. No consumer application was migrated.
-- Recurrence, persistence, editor behavior and application-specific optimistic updates belong to the consumer and are not certified by these tests.
+- Recurrence, persistence, consumer-specific editors and optimistic updates belong to the consumer and are not certified by these tests. The included playground editor is an in-memory example.
 - The renderer is not virtualized; the test of 1,000 layout intervals is not a throughput or browser memory guarantee for arbitrarily large schedules.
 - [Feature differences](features.md) and [DST behavior](dates.md) are explicit preview constraints. Time-view all-day events remain daily fragments, and the time axis does not duplicate DST fall-back hours.
 - Repository visibility remains private and `private: true` blocks npm publication. Publication requires the owner's separate review.

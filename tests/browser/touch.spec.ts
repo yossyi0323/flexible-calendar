@@ -20,6 +20,7 @@ test("touch taps empty cells to create a new event", async ({ page }) => {
   await page.goto("/");
   await page.selectOption("#scenario", "plain");
   await page.getByRole("button", { name: "Day", exact: true }).tap();
+  await page.evaluate(() => window.demoCalendar.scrollToTime(600));
   const p = await page.locator(".fc-time-column").evaluate((node) => {
     const r = node.getBoundingClientRect();
     return { x: r.x + r.width / 2, y: r.y + (r.height * 690) / 1440 };

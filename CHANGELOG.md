@@ -16,4 +16,7 @@
 - Continuous month bars, accessible overflow dialog, inline expansion option and configurable fixed weeks.
 - Reproducible browser rendering benchmarks and regression tests for the new behavior.
 
+- shadcn/ui playground controls and date-time editor with all-day dates, resource selection, interval validation and explicit display-zone conversion.
+- Neutral light/dark styling shared by all calendar views; UI packages remain development-only dependencies.
+
 Private development preview; no npm release has been made.

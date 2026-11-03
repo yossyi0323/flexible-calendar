@@ -174,7 +174,7 @@ test("dark mode, Japanese labels, and month overflow", async ({ page }) => {
     await page
       .locator(".fc-calendar")
       .evaluate((el) => getComputedStyle(el).backgroundColor),
-  ).toBe("rgb(17, 28, 39)");
+  ).toBe("rgb(9, 9, 11)");
   await page.selectOption("#locale", "ja-JP");
   await page.getByRole("button", { name: "月", exact: true }).click();
   await page
