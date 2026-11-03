@@ -63,3 +63,5 @@ CI repeats formatting, type/unit/build checks, package-consumer validation and t
 Horizontal scroll regression tests check all three gutter positions, column alignment and hit testing in LTR/RTL after simultaneous vertical/horizontal scrolling. A dense all-day fixture verifies cell overflow remains scrollable.
 
 After the Agenda handle fix, the calendar browser suite passed 87 cases across Chromium, Firefox and WebKit. It verifies Agenda has no resize handles or grab styling, click/Enter still open the editor, and time-view handles remain available.
+
+The Firefox width fix and mobile follow-up passed 54 editor/touch cases locally. Touch coverage now includes 320×568, 390×844 and 844×390 viewport emulation, date/column popovers, overnight saves, rotation while editing and opening an event in landscape. This is browser emulation, not real iPhone Safari or on-screen-keyboard verification. Linux CI remains the cross-platform release gate.

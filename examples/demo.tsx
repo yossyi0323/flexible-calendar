@@ -44,7 +44,7 @@ function App() {
       days: 3,
       timeZone: zone,
       resources: resources("plan"),
-      height: "min(760px, calc(100dvh - 230px))",
+      height: "clamp(320px, calc(100dvh - 230px), 760px)",
       scrollToMinute: 480,
       theme: "auto",
       now: () => at(640),

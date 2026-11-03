@@ -130,7 +130,7 @@ export function EventEditor({
     >
       <DialogContent
         id="editor"
-        className="w-fit max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-[calc(100%-2rem)]"
+        className="w-max max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-[calc(100%-2rem)]"
         onCloseAutoFocus={(e) => {
           e.preventDefault();
           onRestoreFocus();

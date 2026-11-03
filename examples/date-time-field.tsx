@@ -49,7 +49,9 @@ export function DateTimeField({
       <legend className="mb-2 text-sm font-medium">{label}</legend>
       <div
         className={
-          allDay ? "grid" : "grid grid-cols-[max-content_max-content] gap-2"
+          allDay
+            ? "grid"
+            : "grid grid-cols-1 gap-2 min-[360px]:grid-cols-[max-content_max-content]"
         }
       >
         <Popover open={open} onOpenChange={setOpen}>
@@ -72,7 +74,8 @@ export function DateTimeField({
           <PopoverContent
             id={`${id}-popover`}
             align="start"
-            className="w-auto p-0"
+            className="w-auto max-h-[var(--radix-popover-content-available-height)] overflow-y-auto p-0"
+            collisionPadding={8}
             aria-label={`${label} date picker`}
           >
             <Calendar
@@ -105,7 +108,7 @@ export function DateTimeField({
                 onChange={(e) => onChange(`${date}T${e.target.value}`)}
                 aria-invalid={invalid}
                 aria-describedby={invalid ? "event-error" : undefined}
-                className="w-auto appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                className="w-[11ch] flex-none tabular-nums appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
               />
               <InputGroupAddon>
                 <Clock2Icon className="text-muted-foreground" />

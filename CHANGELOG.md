@@ -37,3 +37,5 @@ Private development preview; no npm release has been made.
 - Keep the timezone and all-day corner labels aligned with the sticky time gutter while scrolling horizontally; overflowing all-day event lists scroll within their resource cells.
 
 - Omit pointer resize handles and grab styling from Agenda rows while retaining click and keyboard activation.
+
+- Bound native time input width across platforms, fit the editor to its content, wrap date/time on very narrow screens, constrain calendar popovers to available height and keep the demo usable in landscape.
