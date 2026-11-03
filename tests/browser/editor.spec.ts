@@ -285,6 +285,11 @@ for (const theme of ["light", "dark"]) {
     await expect(
       options.getByRole("option", { name: "DO", exact: true }),
     ).toHaveAttribute("aria-selected", "true");
+    await options.evaluate(async (node) => {
+      await Promise.all(
+        node.getAnimations().map((animation) => animation.finished),
+      );
+    });
     const result = await new AxeBuilder({ page })
       .include('[role="listbox"]')
       .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
