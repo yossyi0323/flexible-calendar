@@ -1,0 +1,52 @@
+{
+  "commit": "ef5732af670a2d8a7ee250836bdca84c76093eb1",
+  "platform": "darwin",
+  "arch": "arm64",
+  "cpu": "Apple M5",
+  "browser": "156.0.8078.4",
+  "method": "Median of 3 after 1 warm-up; synchronous rendering plus forced layout; seven days / three resources; no CPU throttling",
+  "rows": [
+    {
+      "count": 100,
+      "view": "vertical",
+      "mountMs": 23,
+      "updateMs": 22.7,
+      "domNodes": 756
+    },
+    {
+      "count": 100,
+      "view": "month",
+      "mountMs": 6.1,
+      "updateMs": 6.1,
+      "domNodes": 220
+    },
+    {
+      "count": 500,
+      "view": "vertical",
+      "mountMs": 104.5,
+      "updateMs": 97.3,
+      "domNodes": 3156
+    },
+    {
+      "count": 500,
+      "view": "month",
+      "mountMs": 6.6,
+      "updateMs": 6.5,
+      "domNodes": 220
+    },
+    {
+      "count": 2000,
+      "view": "vertical",
+      "mountMs": 352.1,
+      "updateMs": 345,
+      "domNodes": 12156
+    },
+    {
+      "count": 2000,
+      "view": "month",
+      "mountMs": 11.6,
+      "updateMs": 11.4,
+      "domNodes": 220
+    }
+  ]
+}
