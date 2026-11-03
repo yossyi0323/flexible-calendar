@@ -6,4 +6,4 @@ The date picker composes the registry Calendar and Popover components, following
 
 They power the playground only. Tailwind, Radix and the UI helper packages are development dependencies; the published calendar core and DOM renderer do not require them. The calendar's standalone CSS uses a matching neutral palette for both themes.
 
-The event schedule follows the official [CalendarWithTime example](https://github.com/shadcn-ui/ui/blob/main/apps/v4/examples/base/calendar-time.tsx), using Calendar, Card, Field and InputGroup. Time inputs use `type="time"` with `step={60}` for minute precision. An optional end-date selector supports multi-day events.
+The compact start/end rows use Calendar + Popover for dates and the native `type="time"` InputGroup from the official [CalendarWithTime example](https://github.com/shadcn-ui/ui/blob/main/apps/v4/examples/base/calendar-time.tsx). Time inputs use `step={60}` for minute precision. Both dates remain directly accessible for multi-day events.

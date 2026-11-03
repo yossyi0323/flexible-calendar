@@ -96,11 +96,15 @@ test("selection can continue downward into next-day 02:00", async ({
   await page.mouse.move(a.x, a.y);
   await page.mouse.down();
   await extend(page, 1560);
-  await expect(
-    page.locator("#event-schedule button[data-selected-single=true]"),
-  ).toHaveText("3");
+  await expect(page.locator("#event-start")).toHaveAttribute(
+    "data-date",
+    "2026-11-03",
+  );
   await expect(page.locator("#event-start-time")).toHaveValue("23:00");
-  await expect(page.locator("#event-end")).toHaveValue("2026-11-04");
+  await expect(page.locator("#event-end")).toHaveAttribute(
+    "data-date",
+    "2026-11-04",
+  );
   await expect(page.locator("#event-end-time")).toHaveValue("02:00");
 });
 test("Escape restores the normal time axis and leaves the interval unchanged", async ({

@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import type { CalendarHandle } from "../../src/dom/index.js";
 declare global {
@@ -8,8 +8,15 @@ declare global {
 }
 test.use({
   timezoneId: "America/New_York",
-  viewport: { width: 1280, height: 1000 },
+  viewport: { width: 1280, height: 720 },
 });
+async function selectDate(page: Page, field: "start" | "end", date: string) {
+  await page.locator(`#event-${field}`).click();
+  const [year, month, day] = date.split("-").map(Number);
+  await page
+    .locator(`#event-${field}-popover [data-day="${month}/${day}/${year}"]`)
+    .click();
+}
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".fc-calendar")).toBeVisible();
@@ -18,13 +25,13 @@ test("edits exact dates and times in the calendar zone, including overnight even
   page,
 }) => {
   await page.locator('[data-event-id="2"]').click();
-  await expect(
-    page.locator("#event-schedule button[data-selected-single=true]"),
-  ).toHaveText("3");
+  await expect(page.locator("#event-start")).toHaveAttribute(
+    "data-date",
+    "2026-11-03",
+  );
   await expect(page.locator("#event-start-time")).toHaveValue("09:15");
   await page.locator("#event-start-time").fill("23:10");
-  await page.locator("#event-different-end").check();
-  await page.locator("#event-end").fill("2026-11-04");
+  await selectDate(page, "end", "2026-11-04");
   await page.locator("#event-end-time").fill("01:25");
   await page.locator("#save").click();
   await expect(page.locator("#editor")).not.toBeVisible();
@@ -78,12 +85,15 @@ test("all-day date input uses an inclusive end without changing the exclusive ev
   page,
 }) => {
   await page.locator('[data-event-id="6"]').click();
-  await expect(
-    page.locator("#event-schedule button[data-selected-single=true]"),
-  ).toHaveText("4");
-  await page.locator("#event-different-end").check();
-  await expect(page.locator("#event-end")).toHaveValue("2026-11-04");
-  await page.locator("#event-end").fill("2026-11-05");
+  await expect(page.locator("#event-start")).toHaveAttribute(
+    "data-date",
+    "2026-11-04",
+  );
+  await expect(page.locator("#event-end")).toHaveAttribute(
+    "data-date",
+    "2026-11-04",
+  );
+  await selectDate(page, "end", "2026-11-05");
   await page.locator("#save").click();
   expect(
     await page.evaluate(() =>
@@ -132,7 +142,6 @@ test("shadcn calendar selects a date and keeps typed time in the calendar zone",
       '#editor input[type="datetime-local"], #editor input[type="date"]',
     ),
   ).toHaveCount(0);
-  await page.locator("#event-different-end").check();
   await page
     .getByRole("button", { name: "Choose end date", exact: true })
     .click();
@@ -141,7 +150,10 @@ test("shadcn calendar selects a date and keeps typed time in the calendar zone",
   await popup
     .getByRole("button", { name: /Wednesday, November 4th, 2026/ })
     .click();
-  await expect(page.locator("#event-end")).toHaveValue("2026-11-04");
+  await expect(page.locator("#event-end")).toHaveAttribute(
+    "data-date",
+    "2026-11-04",
+  );
   await page.locator("#event-end-time").fill("02:07");
   await page.locator("#save").click();
   expect(
@@ -159,7 +171,6 @@ for (const theme of ["light", "dark"])
   }, testInfo) => {
     await page.selectOption("#theme", theme);
     await page.locator('[data-event-id="2"]').click();
-    await page.locator("#event-different-end").check();
     await page
       .getByRole("button", { name: "Choose end date", exact: true })
       .click();
@@ -189,17 +200,14 @@ for (const theme of ["light", "dark"])
     ).toBeFocused();
   });
 
-test("official time fields use native segments and a shared calendar preserves the time interval", async ({
+test("native time fields and date popovers preserve the time interval", async ({
   page,
 }) => {
   await page.locator('[data-event-id="2"]').click();
   await expect(page.locator('#editor input[type="time"]')).toHaveCount(2);
   await expect(page.locator('#editor input[type="number"]')).toHaveCount(0);
   await expect(page.locator("#event-start-time")).toHaveAttribute("step", "60");
-  await page
-    .locator("#event-schedule")
-    .getByRole("button", { name: /Thursday, November 5th, 2026/ })
-    .click();
+  await selectDate(page, "start", "2026-11-05");
   await page.locator("#save").click();
   expect(
     await page.evaluate(() => {
@@ -213,3 +221,39 @@ test("official time fields use native segments and a shared calendar preserves t
   await page.locator("#event-all-day").check();
   await expect(page.locator('#editor input[type="time"]')).toHaveCount(0);
 });
+
+for (const viewport of [
+  { width: 1280, height: 720 },
+  { width: 390, height: 844 },
+]) {
+  test(`compact editor fits ${viewport.width}x${viewport.height} with date and time on the same row`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize(viewport);
+    await page.selectOption("#theme", "dark");
+    await page.locator('[data-event-id="2"]').click();
+    const editor = page.locator("#editor");
+    await expect(editor).toBeVisible();
+    await editor.evaluate(async (node) => {
+      await Promise.all(node.getAnimations().map((a) => a.finished));
+    });
+    const geometry = await editor.evaluate((node) => ({
+      height: node.clientHeight,
+      content: node.scrollHeight,
+    }));
+    expect(geometry.content).toBeLessThanOrEqual(geometry.height + 1);
+    await expect(page.locator('[data-slot="calendar"]')).toHaveCount(0);
+    for (const field of ["start", "end"]) {
+      const date = (await page.locator(`#event-${field}`).boundingBox())!;
+      const time = (await page.locator(`#event-${field}-time`).boundingBox())!;
+      expect(Math.abs(date.y - time.y)).toBeLessThan(3);
+      expect(time.x).toBeGreaterThan(date.x);
+      expect(time.x + time.width).toBeLessThan(viewport.width);
+    }
+    const save = (await page.locator("#save").boundingBox())!;
+    expect(save.y + save.height).toBeLessThan(viewport.height);
+    await page.screenshot({
+      path: testInfo.outputPath(`compact-${viewport.width}.png`),
+    });
+  });
+}

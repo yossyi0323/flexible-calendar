@@ -1,9 +1,13 @@
 import { useState } from "react";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Clock2Icon } from "lucide-react";
 import { Calendar } from "./ui/calendar.js";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover.js";
 import { Button } from "./ui/button.js";
-import { Input } from "./ui/input.js";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "./ui/input-group.js";
 import { Label } from "./ui/label.js";
 
 interface Props {
@@ -43,32 +47,26 @@ export function DateTimeField({
   return (
     <fieldset className="grid min-w-0 gap-2">
       <legend className="mb-2 text-sm font-medium">{label}</legend>
-      <Label htmlFor={id} className="sr-only">
-        {label} date
-      </Label>
-      <div className="flex gap-1">
-        <Input
-          id={id}
-          type="text"
-          value={date}
-          onChange={(e) => updateDate(e.target.value)}
-          placeholder="YYYY-MM-DD"
-          pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"
-          maxLength={10}
-          required
-          aria-invalid={invalid}
-          aria-describedby={invalid ? "event-error" : undefined}
-          className="min-w-0 tabular-nums"
-        />
+      <div
+        className={
+          allDay ? "grid" : "grid grid-cols-[minmax(0,1fr)_8rem] gap-2"
+        }
+      >
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
               type="button"
               variant="outline"
-              size="icon"
+              id={id}
+              data-date={date}
+              className="min-w-0 justify-start font-normal"
+              aria-invalid={invalid}
               aria-label={`Choose ${label.toLowerCase()} date`}
             >
-              <CalendarIcon />
+              <CalendarIcon className="text-muted-foreground" />
+              <span className="truncate tabular-nums">
+                {date.replaceAll("-", "/")}
+              </span>
             </Button>
           </PopoverTrigger>
           <PopoverContent
@@ -92,6 +90,29 @@ export function DateTimeField({
             />
           </PopoverContent>
         </Popover>
+        {!allDay && (
+          <>
+            <Label htmlFor={`${id}-time`} className="sr-only">
+              {label} time
+            </Label>
+            <InputGroup>
+              <InputGroupInput
+                id={`${id}-time`}
+                type="time"
+                step={60}
+                required
+                value={time}
+                onChange={(e) => onChange(`${date}T${e.target.value}`)}
+                aria-invalid={invalid}
+                aria-describedby={invalid ? "event-error" : undefined}
+                className="appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+              />
+              <InputGroupAddon>
+                <Clock2Icon className="text-muted-foreground" />
+              </InputGroupAddon>
+            </InputGroup>
+          </>
+        )}
       </div>
     </fieldset>
   );
