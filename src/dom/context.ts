@@ -5,6 +5,7 @@ import type {
   EventChange,
   SlotSelection,
   View,
+  Segment,
 } from "../core/index.js";
 import type { CalendarOptions, Messages } from "./types.js";
 /** Private, typed services passed to renderers/controllers. Mutable state stays with its owner. */
@@ -47,5 +48,10 @@ export interface CalendarContext<E extends CalendarEvent> {
   ) => void;
   dayKeyboard: (event: KeyboardEvent, column: Column) => void;
   updateNow: () => void;
+  segmentsForDay: (
+    date: DateKey,
+    background?: boolean,
+  ) => readonly Segment<E>[];
+  flushUpdates: () => void;
   isClickSuppressed: () => boolean;
 }

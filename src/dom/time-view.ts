@@ -1,10 +1,8 @@
 import {
   atMinute,
   buildColumns,
-  eventsInDay,
   layoutSegments,
   matchesResource,
-  splitEvent,
   type CalendarEvent,
 } from "../core/index.js";
 import { applyStyle, button, element, setContent } from "./helpers.js";
@@ -12,6 +10,7 @@ import type { CalendarContext } from "./context.js";
 export function timeView<E extends CalendarEvent>(ctx: CalendarContext<E>) {
   const {
     options,
+    segmentsForDay,
     doc,
     scroller,
     tz,
@@ -74,9 +73,9 @@ export function timeView<E extends CalendarEvent>(ctx: CalendarContext<E>) {
       );
       cell.addEventListener("keydown", (e) => dayKeyboard(e, column));
     }
-    for (const event of eventsInDay(options.events, column.date, tz()).filter(
-      (e) => e.allDay && matchesResource(e, column.resourceId),
-    ))
+    for (const event of segmentsForDay(column.date)
+      .map((s) => s.event)
+      .filter((e) => e.allDay && matchesResource(e, column.resourceId)))
       cell.append(eventNode(event, column.date));
     allDay.append(cell);
   }
@@ -117,11 +116,10 @@ export function timeView<E extends CalendarEvent>(ctx: CalendarContext<E>) {
         cell.querySelector(".fc-keyboard-cursor")?.remove(),
       );
     }
-    const matched = options.events.filter(
-      (e) => !e.allDay && matchesResource(e, column.resourceId),
-    );
-    const segments = matched
-      .flatMap((e) => splitEvent(e, [column.date], tz()))
+    const segments = segmentsForDay(column.date)
+      .filter(
+        (s) => !s.event.allDay && matchesResource(s.event, column.resourceId),
+      )
       .map((s) => ({
         ...s,
         startMinute: Math.max(min(), s.startMinute),
@@ -131,20 +129,19 @@ export function timeView<E extends CalendarEvent>(ctx: CalendarContext<E>) {
         ),
       }))
       .filter((s) => s.startMinute < s.endMinute);
-    for (const bg of (options.backgroundEvents ?? []).filter((e) =>
-      matchesResource(e, column.resourceId),
-    ))
-      for (const s of splitEvent(bg, [column.date], tz())) {
-        const node = element(doc, "div", "fc-background-event");
-        node.setAttribute("aria-hidden", "true");
-        if (bg.color) node.style.backgroundColor = bg.color;
-        position(
-          node,
-          Math.max(min(), s.startMinute),
-          Math.min(max(), s.endMinute),
-        );
-        cell.append(node);
-      }
+    for (const s of segmentsForDay(column.date, true).filter((s) =>
+      matchesResource(s.event, column.resourceId),
+    )) {
+      const node = element(doc, "div", "fc-background-event");
+      node.setAttribute("aria-hidden", "true");
+      if (s.event.color) node.style.backgroundColor = s.event.color;
+      position(
+        node,
+        Math.max(min(), s.startMinute),
+        Math.min(max(), s.endMinute),
+      );
+      cell.append(node);
+    }
     const positioned =
       typeof options.dayLayoutAlgorithm === "function"
         ? options.dayLayoutAlgorithm(segments)

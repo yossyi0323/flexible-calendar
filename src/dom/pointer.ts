@@ -250,6 +250,7 @@ export function createPointerController<E extends CalendarEvent>(
     if (!gesture || gesture.id !== e.pointerId) return;
     const g = gesture;
     stopGesture();
+    ctx.flushUpdates();
     if (g.moved) {
       suppressClick = true;
       win.setTimeout(() => {
@@ -288,7 +289,7 @@ export function createPointerController<E extends CalendarEvent>(
   function keyDown(e: KeyboardEvent) {
     const { announce } = ctx;
     if (e.key === "Escape" && gesture) {
-      stopGesture();
+      cancelGesture();
       announce("Cancelled");
     }
   }
@@ -320,23 +321,29 @@ export function createPointerController<E extends CalendarEvent>(
     if (options.getExternalEvent && hitAt(e.clientX, e.clientY))
       e.preventDefault();
   }
+  function cancelGesture() {
+    const active = !!gesture;
+    stopGesture();
+    if (active) ctx.flushUpdates();
+  }
   root.addEventListener("pointerdown", pointerDown);
   root.addEventListener("pointermove", pointerMove);
   root.addEventListener("pointerup", pointerUp);
-  root.addEventListener("pointercancel", stopGesture);
-  root.addEventListener("lostpointercapture", stopGesture);
+  root.addEventListener("pointercancel", cancelGesture);
+  root.addEventListener("lostpointercapture", cancelGesture);
   root.addEventListener("keydown", keyDown);
   root.addEventListener("drop", externalDrop);
   root.addEventListener("dragover", dragOver);
-  win.addEventListener("blur", stopGesture);
+  win.addEventListener("blur", cancelGesture);
 
   return {
     stopGesture,
     isActive: () => !!gesture,
+    activeEvent: () => gesture?.event,
     isClickSuppressed: () => suppressClick,
     destroy: () => {
       stopGesture();
-      win.removeEventListener("blur", stopGesture);
+      win.removeEventListener("blur", cancelGesture);
     },
   };
 }

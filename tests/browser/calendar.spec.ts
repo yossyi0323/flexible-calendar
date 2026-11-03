@@ -444,3 +444,56 @@ test("RTL column keyboard navigation follows visual direction", async ({
   await page.keyboard.press("ArrowLeft");
   await expect(columns.nth(1)).toBeFocused();
 });
+
+test("data refresh during a drag preserves capture and applies the eventual change", async ({
+  page,
+}) => {
+  const a = await point(page, 1, 585),
+    b = await point(page, 2, 705);
+  await page.mouse.move(a.x, a.y);
+  await page.mouse.down();
+  await page.mouse.move(b.x, b.y, { steps: 8 });
+  await page.evaluate(() => {
+    const c = window.demoCalendar;
+    c.update({
+      events: c
+        .getOptions()
+        .events.map((e) => (e.id === "1" ? { ...e, title: "Refreshed" } : e)),
+    });
+  });
+  await expect(page.locator(".fc-calendar")).toHaveClass(/fc-interacting/);
+  await page.mouse.up();
+  const value = await page.evaluate(() =>
+    window.demoCalendar.getOptions().events.find((e) => e.id === "2"),
+  );
+  expect(value?.start.toISOString()).toBe("2026-11-04T02:15:00.000Z");
+});
+test("a concurrent change to the dragged event cancels a stale gesture", async ({
+  page,
+}) => {
+  const a = await point(page, 1, 585),
+    b = await point(page, 2, 705);
+  await page.mouse.move(a.x, a.y);
+  await page.mouse.down();
+  await page.mouse.move(b.x, b.y, { steps: 8 });
+  await page.evaluate(() => {
+    const c = window.demoCalendar;
+    c.update({
+      events: c
+        .getOptions()
+        .events.map((e) =>
+          e.id === "2" ? { ...e, start: new Date(+e.start + 60000) } : e,
+        ),
+    });
+  });
+  await expect(page.locator(".fc-calendar")).not.toHaveClass(/fc-interacting/);
+  await page.mouse.up();
+  expect(
+    await page.evaluate(() =>
+      window.demoCalendar
+        .getOptions()
+        .events.find((e) => e.id === "2")
+        ?.start.toISOString(),
+    ),
+  ).toBe("2026-11-03T00:16:00.000Z");
+});

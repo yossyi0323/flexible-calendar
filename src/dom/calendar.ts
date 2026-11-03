@@ -3,7 +3,7 @@ import {
   atMinute,
   dateKey,
   defaultTimeZone,
-  formatDate,
+  indexSegments,
   minuteOfDay,
   getViewDates,
   type CalendarEvent,
@@ -12,6 +12,7 @@ import {
   type EventChange,
   type SlotSelection,
   type View,
+  type Segment,
 } from "../core/index.js";
 import { applyStyle, element, englishMessages, setContent } from "./helpers.js";
 import type { CalendarContext } from "./context.js";
@@ -39,6 +40,10 @@ export function createCalendar<E extends CalendarEvent>(
   let scroller: HTMLElement;
   let live: HTMLElement;
   let destroyed = false;
+  let pendingOptions: CalendarOptions<E> | undefined;
+  let eventIndex: Map<DateKey, Segment<E>[]> | undefined;
+  let backgroundIndex: Map<DateKey, Segment<E>[]> | undefined;
+  const formatters = new Map<string, Intl.DateTimeFormat>();
   let lastRange = "";
   let renderedView: View | undefined;
   const scrollPositions = new Map<View, { top: number; left: number }>();
@@ -50,8 +55,19 @@ export function createCalendar<E extends CalendarEvent>(
   const min = () => options.minMinute ?? 0;
   const max = () => options.maxMinute ?? 1440;
   const messages = () => ({ ...englishMessages, ...options.messages });
-  const fmt = (date: Date, format: Intl.DateTimeFormatOptions) =>
-    formatDate(date, locale(), tz(), format);
+  const fmt = (date: Date, format: Intl.DateTimeFormatOptions) => {
+    const key = JSON.stringify([locale(), tz(), format]);
+    let formatter = formatters.get(key);
+    if (!formatter) {
+      if (formatters.size >= 32) formatters.clear();
+      formatter = new Intl.DateTimeFormat(locale(), {
+        ...format,
+        timeZone: tz(),
+      });
+      formatters.set(key, formatter);
+    }
+    return formatter.format(date);
+  };
   const dayLabel = (date: DateKey) =>
     options.formats?.day?.(atMinute(date, 720, tz())) ??
     fmt(atMinute(date, 12 * 60, tz()), {
@@ -159,6 +175,8 @@ export function createCalendar<E extends CalendarEvent>(
   function render() {
     if (destroyed) return;
     pointer.stopGesture();
+    eventIndex = undefined;
+    backgroundIndex = undefined;
     options.onBeforeRender?.();
     if (renderedView && scroller)
       scrollPositions.set(renderedView, {
@@ -280,6 +298,22 @@ export function createCalendar<E extends CalendarEvent>(
     showKeyboardCursor: (...args) => keyboard.showKeyboardCursor(...args),
     slotKeyboard: (...args) => keyboard.slotKeyboard(...args),
     dayKeyboard: (...args) => keyboard.dayKeyboard(...args),
+    segmentsForDay: (date, background = false) => {
+      if (background)
+        return (
+          (backgroundIndex ??= indexSegments(
+            options.backgroundEvents ?? [],
+            dates(),
+            tz(),
+          )).get(date) ?? []
+        );
+      return (
+        (eventIndex ??= indexSegments(options.events, dates(), tz())).get(
+          date,
+        ) ?? []
+      );
+    },
+    flushUpdates,
     isClickSuppressed: () => pointer.isClickSuppressed(),
   };
   const keyboard = createKeyboardController(ctx);
@@ -301,19 +335,44 @@ export function createCalendar<E extends CalendarEvent>(
   }
   if (options.scrollToMinute !== undefined)
     scrollToTime(options.scrollToMinute);
+  function flushUpdates() {
+    if (!pendingOptions || destroyed) return;
+    options = pendingOptions;
+    pendingOptions = undefined;
+    render();
+  }
+  function applyOptions(next: CalendarOptions<E>) {
+    validateOptions(next);
+    if (pointer.isActive()) {
+      pendingOptions = next;
+      const active = pointer.activeEvent();
+      const updated =
+        active && next.events.find((event) => event.id === active.id);
+      if (
+        active &&
+        (!updated ||
+          +updated.start !== +active.start ||
+          +updated.end !== +active.end ||
+          JSON.stringify(updated.resourceId) !==
+            JSON.stringify(active.resourceId))
+      ) {
+        pointer.stopGesture();
+        flushUpdates();
+      }
+      return;
+    }
+    pendingOptions = undefined;
+    options = next;
+    render();
+  }
   return {
     update(next) {
       if (destroyed) throw new Error("Calendar has been destroyed");
-      const merged = { ...options, ...next };
-      validateOptions(merged);
-      options = merged;
-      render();
+      applyOptions({ ...(pendingOptions ?? options), ...next });
     },
     setOptions(next) {
       if (destroyed) throw new Error("Calendar has been destroyed");
-      validateOptions(next);
-      options = { ...next };
-      render();
+      applyOptions({ ...next });
     },
     getOptions: () => ({ ...options }),
     scrollToTime,
