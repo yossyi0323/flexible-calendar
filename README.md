@@ -2,7 +2,7 @@
 
 A TypeScript calendar with a framework-independent engine and DOM renderer, plus React and Vue adapters. Ordinary day, week, work-week, month and agenda views sit alongside a native **date × resource vertical view**. Events always retain their real timestamps and IDs.
 
-**Status: 0.1.0 development preview.** This repository is private pending owner review. Nothing has been published to npm. `private: true` intentionally prevents accidental publication. The package name in examples is the intended package name; use the local tarball until a release exists.
+**Status: 0.1.0 development preview.** The API may change before 1.0. Nothing has been published to npm. `private: true` intentionally prevents accidental publication. The package name in examples is the intended package name; use the local tarball until a release exists.
 
 ![Dark vertical calendar with real dates and Plan/Do columns](docs/images/vertical-dark.png)
 

@@ -23,13 +23,16 @@ test("touch taps empty cells to create a new event", async ({ page }) => {
   await expect(page.locator(".fc-calendar")).toBeVisible();
   await chooseOption(page, "#scenario", "Personal calendar");
   await page.getByRole("button", { name: "Day", exact: true }).tap();
-  await page.evaluate(() => window.demoCalendar.scrollToTime(600));
-  const p = await page.locator(".fc-time-column").evaluate((node) => {
-    const r = node.getBoundingClientRect();
-    return { x: r.x + r.width / 2, y: r.y + (r.height * 690) / 1440 };
-  });
-  await page.touchscreen.tap(p.x, p.y);
-  await expect(page.locator("#editor")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Day", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  const column = page.locator(".fc-time-column");
+  const position = await column.evaluate((node) => ({
+    x: node.clientWidth / 2,
+    y: (node.clientHeight * 690) / 1440,
+  }));
+  await column.tap({ position });
+  await expect(page.locator("#event-start-time")).toHaveValue("11:30");
   await page.locator("#event-title").fill("Touch event");
   await page.locator("#save").tap();
   await expect(page.getByRole("button", { name: /Touch event/ })).toHaveCount(
