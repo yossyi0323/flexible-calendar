@@ -25,3 +25,5 @@
 - Poll file changes in the development server so external edits invalidate served modules.
 
 Private development preview; no npm release has been made.
+
+- Drag and resize previews retain the source timed event’s overlap-lane width and inline position, including RTL and cross-column moves.

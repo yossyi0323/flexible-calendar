@@ -37,6 +37,7 @@ type Gesture<E extends CalendarEvent> = {
   lastY: number;
   moved: boolean;
   offset: number;
+  horizontal?: { start: string; width: string };
 };
 const DRAG_THRESHOLD = 5;
 const AUTO_SCROLL_EDGE = 40;
@@ -112,6 +113,16 @@ export function createPointerController<E extends CalendarEvent>(
       current: hit,
       ...(event ? { event } : {}),
       ...(edge ? { edge } : {}),
+      // Keep the rendered overlap lane, including its gap and RTL position.
+      // Percentages remain relative to the destination column when moving.
+      ...(capture.classList.contains("fc-timed-event")
+        ? {
+            horizontal: {
+              start: capture.style.insetInlineStart,
+              width: capture.style.width,
+            },
+          }
+        : {}),
       x: e.clientX,
       y: e.clientY,
       lastX: e.clientX,
@@ -233,6 +244,11 @@ export function createPointerController<E extends CalendarEvent>(
       `${timeLabel(range.start)} – ${timeLabel(range.end)}`,
     );
     if (!g.current.allDay) {
+      if (g.horizontal) {
+        preview.style.insetInlineStart = g.horizontal.start;
+        preview.style.insetInlineEnd = "auto";
+        preview.style.width = g.horizontal.width;
+      }
       if (overnight) {
         const wallMinute = (date: Date) =>
           differenceInDays(g.current.column.date, dateKey(date, tz())) * 1440 +

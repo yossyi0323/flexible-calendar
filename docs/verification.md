@@ -8,7 +8,7 @@ This records checks performed on the 0.1.0 implementation after the review impro
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | Strict TypeScript, including examples and tests | Passed                                                                                                                                |
 | Unit suite                                      | 41 passed                                                                                                                             |
-| Playwright suite                                | 181 passed                                                                                                                            |
+| Playwright suite                                | 196 passed                                                                                                                            |
 | Desktop browser engines                         | Chromium, Firefox, WebKit                                                                                                             |
 | Mobile emulation                                | Pixel 7 / Chromium and iPhone 13 / WebKit                                                                                             |
 | axe WCAG 2 A/AA and 2.1 A/AA rules              | No automatic violations in sampled vertical, month and agenda views, in light and dark themes, on all three desktop engines           |
