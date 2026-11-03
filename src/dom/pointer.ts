@@ -16,6 +16,7 @@ import {
   type SlotSelection,
 } from "../core/index.js";
 import { element } from "./helpers.js";
+import { extendOvernightDrag } from "./overnight-drag.js";
 import type { CalendarContext } from "./context.js";
 type Hit = {
   column: Column;
@@ -46,10 +47,12 @@ export function createPointerController<E extends CalendarEvent>(
 ) {
   const { root, win } = ctx;
   let gesture: Gesture<E> | undefined;
+  let overnight: ReturnType<typeof extendOvernightDrag<E>>;
   let raf = 0,
     suppressClick = false;
   function hitAt(x: number, y: number): Hit | undefined {
     const { doc, step, min, max } = ctx;
+    const endMinute = overnight?.endMinute ?? max();
     const pointed = doc.elementFromPoint(x, y);
     let target = pointed?.closest<HTMLElement>("[data-column-key]");
     if (!target) {
@@ -80,10 +83,10 @@ export function createPointerController<E extends CalendarEvent>(
       minute: allDay
         ? 0
         : snapMinute(
-            min() + ((y - rect.top) / rect.height) * (max() - min()),
+            min() + ((y - rect.top) / rect.height) * (endMinute - min()),
             step(),
             min(),
-            max(),
+            endMinute,
           ),
       node: target,
     };
@@ -118,6 +121,8 @@ export function createPointerController<E extends CalendarEvent>(
         ? +atMinute(hit.column.date, hit.minute, tz()) - +event.start
         : 0,
     };
+    if (!hit.allDay && (!event || edge === "end"))
+      overnight = extendOvernightDrag(ctx);
     capture.setPointerCapture(e.pointerId);
     root.classList.add("fc-interacting");
     raf = win.requestAnimationFrame(autoScroll);
@@ -228,24 +233,35 @@ export function createPointerController<E extends CalendarEvent>(
       `${timeLabel(range.start)} – ${timeLabel(range.end)}`,
     );
     if (!g.current.allDay) {
-      const segments = splitEvent(
-        { id: "preview", title: "", start: range.start, end: range.end },
-        [g.current.column.date],
-        tz(),
-      );
-      const segment = segments[0];
-      if (segment)
-        position(
-          preview,
-          Math.max(min(), segment.startMinute),
-          Math.min(max(), segment.endMinute),
-        );
+      if (overnight) {
+        const wallMinute = (date: Date) =>
+          differenceInDays(g.current.column.date, dateKey(date, tz())) * 1440 +
+          minuteOfDay(date, tz());
+        const start = Math.max(min(), wallMinute(range.start));
+        const end = Math.min(overnight.endMinute, wallMinute(range.end));
+        preview.style.top = `${((start - min()) / 60) * (options.hourHeight ?? 64)}px`;
+        preview.style.height = `${(Math.max(0, end - start) / 60) * (options.hourHeight ?? 64)}px`;
+      } else {
+        const segment = splitEvent(
+          { id: "preview", title: "", start: range.start, end: range.end },
+          [g.current.column.date],
+          tz(),
+        )[0];
+        if (segment)
+          position(
+            preview,
+            Math.max(min(), segment.startMinute),
+            Math.min(max(), segment.endMinute),
+          );
+      }
     }
     g.current.node.append(preview);
   }
   function stopGesture() {
     const active = gesture;
     gesture = undefined;
+    overnight?.restore();
+    overnight = undefined;
     if (active && active.capture.hasPointerCapture(active.id))
       active.capture.releasePointerCapture(active.id);
     win.cancelAnimationFrame(raf);

@@ -19,4 +19,6 @@
 - shadcn/ui playground controls and date-time editor with all-day dates, resource selection, interval validation and explicit display-zone conversion.
 - Neutral light/dark styling shared by all calendar views; UI packages remain development-only dependencies.
 
+- Downward timed resize and slot selection can continue past midnight into the following day, with temporary next-day hours and edge auto-scroll.
+
 Private development preview; no npm release has been made.
