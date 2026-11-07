@@ -2,7 +2,7 @@
 
 A TypeScript calendar for plain DOM, React and Vue. Show **multiple columns for each date** to compare planned and actual time, people or rooms side by side. An event keeps its ID and timestamps even when it spans midnight. Day, week, work-week, month and agenda views use the same event data.
 
-**Version 0.1.0 · MIT.** The API may change before 1.0. Until the first npm release, you can [run the playground or build an installable tarball](#try-it-locally).
+**Version 0.1.0 · MIT.** The API may change before 1.0; see the [versioning policy](docs/releasing.md#version-policy) for compatibility guarantees and migration rules. Until the first npm release, you can [run the playground or build an installable tarball](#try-it-locally).
 
 ![Dark vertical calendar with real dates and Plan/Do columns](docs/images/vertical-dark.png)
 
