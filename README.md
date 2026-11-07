@@ -13,6 +13,8 @@ I built Flexible Calendar for my own time-management app, where I use it to comp
 - **Plan and Do side by side for each date.** I wanted each day to have its own Plan and Do columns, so I could compare planned and actual time on the same time axis without switching calendars or views.
 - **One event, even across midnight.** An activity from 23:00 to 01:00 is still one activity. I wanted it to appear on both days while keeping a single event ID and its original start and end timestamps, without making the application maintain separate events for each day.
 
+Before building this library, I compared several well-known calendar libraries, but none of the ones I evaluated met these needs. A smaller, independently maintained project may already offer a suitable solution; I am not claiming that none exists. My initial preference was to build on an established library. When the options I evaluated did not fit, I decided to build my own.
+
 These needs led to date × resource columns and rendering that splits events across days while preserving the original event. Plan and Do are one use of those columns; people and rooms can use the same model.
 
 I use the library in my own app and am developing it as an open-source project. Its API is still evolving as I use it in practice.
