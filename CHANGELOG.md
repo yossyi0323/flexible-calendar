@@ -2,8 +2,6 @@
 
 ## 0.1.0 — Unreleased
 
-- Keep existing overnight events in one continuous box with shared overlap lanes while next-day drag hours are visible.
-
 - Framework-independent TypeScript calendar core and DOM renderer.
 - Day, week, work-week, month, agenda and N-day date × resource vertical views.
 - Timed/all-day events, midnight segmentation, overlap layout and background events.
@@ -46,3 +44,7 @@ Private development preview; no npm release has been made.
 - Time-grid columns support translated keyboard instructions (`messages.timeColumnInstruction`), shared `timeGutterMarkers`, and `hideEmptyAllDayRow`. The default still shows the empty all-day row.
 - Column background images now paint beneath the slot lines. The opt-in `fc-event-surface` class separates a timed card's appearance from its hit area, and grip tokens customize the visible resize handles.
 - React's `renderReactToolbar` receives the calendar navigation context. `onSelectEvent` supplies a third argument with the activated segment's date and anchor. Existing two-argument handlers continue to work.
+
+### Fixed
+
+- Existing overnight events remain continuous across midnight while next-day hours are visible during selection or resizing. Overlap placement includes the following day and returns to the normal layout when the gesture ends or is canceled. No consumer changes are required.
