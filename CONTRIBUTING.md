@@ -12,4 +12,6 @@ npm run format:check
 
 Keep calculations independent from the DOM and frameworks. Add regression tests for date/interaction changes, including exclusive midnight boundaries and DST where relevant. Never mutate caller event records. UI changes must work in light and dark themes and include keyboard behavior. Avoid global styles and framework imports from the core entry.
 
-Use Conventional Commits. Document new public options and changes in `CHANGELOG.md`. API changes during 0.x still need migration notes. Do not publish a package or change repository visibility as part of ordinary implementation work; see the release procedure.
+Use Conventional Commits. Follow the [versioning and release policy](docs/releasing.md): classify each PR as no release, patch, minor, or breaking, and explain its compatibility impact. Document public API changes in the API reference and consumer-visible changes in the pending section of `CHANGELOG.md`. Breaking changes require migration notes, including during 0.x. Do not bump the package version in ordinary feature or fix PRs; versions are finalized in release PRs.
+
+Use the PR template to record the classification, consumer impact, and relevant verification. Do not publish a package or change repository visibility as part of ordinary implementation work; see the release policy.
