@@ -8,6 +8,7 @@ import {
   type Segment,
 } from "../core/index.js";
 import { applyStyle, button, element, setContent } from "./helpers.js";
+import { appendTimeGridGuides } from "./time-guides.js";
 import type { CalendarContext } from "./context.js";
 export function timeView<E extends CalendarEvent>(ctx: CalendarContext<E>) {
   const {
@@ -147,6 +148,7 @@ export function renderTimeColumn<E extends CalendarEvent>(
   setHitData(cell, column, false);
   decorateDay(cell, column.date);
   applyStyle(cell, options.columnStyle?.(column));
+  appendTimeGridGuides(ctx, cell, column, min(), max());
   if (options.selectable !== false) {
     cell.tabIndex = 0;
     cell.setAttribute("role", "group");

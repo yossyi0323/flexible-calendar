@@ -129,3 +129,23 @@ test("landscape keeps timed events reachable below the toolbar and headers", asy
   await page.locator('[data-event-id="1"]').first().tap();
   await expect(page.locator("#editor")).toBeVisible();
 });
+
+test("decorative guide labels allow touch selection", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".fc-calendar")).toBeVisible();
+  await page.evaluate(() => {
+    window.demoCalendar.update({
+      view: "day",
+      resources: [],
+      events: [],
+      timeGridGuides: { interval: 180, style: "labels" },
+    });
+    window.demoCalendar.scrollToTime(540);
+  });
+  const label = page
+    .locator(".fc-time-guide-label")
+    .filter({ hasText: "09:00" });
+  const r = await label.boundingBox();
+  await page.touchscreen.tap(r!.x + 20, r!.y + 4);
+  await expect(page.locator("#event-start-time")).toHaveValue("09:00");
+});

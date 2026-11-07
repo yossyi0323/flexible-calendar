@@ -663,3 +663,46 @@
 .fc-popup-events .fc-event {
   margin-bottom: 6px;
 }
+
+/* Public decorative guide classes; never participate in hit testing. */
+.fc-time-guides {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+  color: var(--fc-guide-color, var(--fc-muted));
+}
+.fc-time-guides * {
+  pointer-events: none;
+}
+.fc-time-guide {
+  position: absolute;
+  inset-inline: 0;
+}
+.fc-time-guide-lines {
+  border-top: var(--fc-guide-width, 1px) solid currentColor;
+  opacity: var(--fc-guide-opacity, 0.45);
+}
+.fc-time-guide-label {
+  display: block;
+  padding: 2px 6px;
+  font-size: var(--fc-guide-font-size, 10px);
+  line-height: 1.2;
+}
+.fc-time-guide-ticks::before,
+.fc-time-guide-ticks::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: var(--fc-guide-tick-size, 6px);
+  border-top: var(--fc-guide-width, 1px) solid currentColor;
+  opacity: var(--fc-guide-opacity, 0.45);
+}
+.fc-time-guide-ticks::before {
+  inset-inline-start: 0;
+}
+.fc-time-guide-ticks::after {
+  inset-inline-end: 0;
+}

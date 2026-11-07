@@ -2,6 +2,8 @@
 
 ## 0.1.0 — Unreleased
 
+- Add opt-in `timeGridGuides` with midnight-aligned lines, labels or boundary ticks, custom label rendering and theme tokens, including temporary overnight hours. Migration: no changes required; guides are disabled by default.
+
 - Framework-independent TypeScript calendar core and DOM renderer.
 - Day, week, work-week, month, agenda and N-day date × resource vertical views.
 - Timed/all-day events, midnight segmentation, overlap layout and background events.

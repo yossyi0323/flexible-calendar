@@ -239,3 +239,43 @@ timeGutterMarkers: () => {
 Set `hideEmptyAllDayRow: true` to show the all-day row only when a displayed date/resource contains an all-day event. The default keeps empty cells available for slot selection. With the option enabled, offer a “New all-day event” action in your toolbar or editor and add the resulting event to `events`. The row appears when that event is in a visible column.
 
 Use `messages.timeColumnInstruction` to translate the keyboard hint in each selectable timed column's accessible name. The date and resource label precede this hint.
+
+### Column-local time guides
+
+`timeGridGuides` is opt-in for day/week/work-week/vertical grids. Omit it or set
+`false` for no major guides. Existing selection-step rules remain unchanged.
+
+```ts
+timeGridGuides: { interval: 180, style: "labels" }
+// Alternatives: { interval: 360, style: "lines" } or { style: "ticks" }
+```
+
+`interval` defaults to 180 minutes and must be a positive integer divisor of
+1440 (e.g. 60, 180 or 360). Guides align to local midnight, independently of
+`step` and `minMinute`. Only positions in `[minMinute, maxMinute)` are rendered.
+They follow `hourHeight`, each resource column, horizontal scrolling, event-only
+updates, and temporary next-day hours during overnight gestures.
+
+`style` defaults to `"lines"`; `"labels"` repeats 24-hour wall-clock labels just
+below each position, while `"ticks"` draws short accents at both column edges.
+The grid uses a fixed wall-clock axis even on DST dates: missing/repeated hours
+retain their ordinary positions, rather than using elapsed time since midnight.
+Default labels intentionally format minute numbers directly (including missing
+hours), and next-day labels have a `+1` suffix.
+
+For custom label content, use `renderLabel({ column, minute, dayOffset })` inside
+`timeGridGuides`. `column` is the original visible date/resource column;
+`minute` is 0–1439 and `dayOffset` is 0 normally or 1 in extended hours. Return
+text or a fresh DOM node per call. This DOM callback is also available through
+the React/Vue options; it does not accept framework virtual nodes. Render only
+decorative content: the entire layer is inert, hidden from assistive technology,
+and excluded from pointer/touch hit testing and keyboard focus.
+
+The public CSS classes are `.fc-time-guides`, `.fc-time-guide`,
+`.fc-time-guide-lines`, `.fc-time-guide-labels`, `.fc-time-guide-label`, and
+`.fc-time-guide-ticks`. Custom properties are `--fc-guide-color` (defaults to
+theme muted text), `--fc-guide-width` (1px), `--fc-guide-opacity` (0.45, lines/ticks),
+`--fc-guide-font-size` (10px), and `--fc-guide-tick-size` (6px). For example,
+add a `border-top` to `.fc-time-guide-labels` to combine labels with lines.
+Guides are clipped to the column, behind event content, and use a separate layer
+so `columnStyle` background images remain intact. Both built-in themes are supported.
