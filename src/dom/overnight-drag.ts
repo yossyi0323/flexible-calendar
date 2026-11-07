@@ -18,6 +18,7 @@ export function extendOvernightDrag<E extends CalendarEvent>(
   const hourHeight = ctx.options.hourHeight ?? 64;
   const originalHeight = ((ctx.max() - ctx.min()) / 60) * hourHeight;
   const saved = new Map<HTMLElement, string | null>();
+  const savedClasses = new Map<HTMLElement, string>();
   const remember = (node: HTMLElement) =>
     saved.set(node, node.getAttribute("style"));
   remember(body);
@@ -58,14 +59,48 @@ export function extendOvernightDrag<E extends CalendarEvent>(
   );
   for (const column of body.querySelectorAll<HTMLElement>(".fc-time-column")) {
     const date = addDays(column.dataset.date!, 1);
+    // Lay out a continuous two-day interval so overlap lanes stay consistent
+    // across midnight. Join by event identity, never by title.
+    const segments = ctx
+      .segmentsForDay(column.dataset.date!)
+      .map((s) => ({ ...s }));
+    for (const next of outsideView.get(date) ?? ctx.segmentsForDay(date)) {
+      const current = segments.find((s) => s.event.id === next.event.id);
+      if (current && current.continuesAfter && next.continuesBefore) {
+        current.end = next.end;
+        current.endMinute = 1440 + next.endMinute;
+        current.continuesAfter = next.continuesAfter;
+      } else {
+        segments.push({
+          ...next,
+          startMinute: 1440 + next.startMinute,
+          endMinute: 1440 + next.endMinute,
+        });
+      }
+    }
+    const existing = new Map(
+      Array.from(
+        column.querySelectorAll<HTMLElement>(".fc-timed-event"),
+        (node) => [node.dataset.eventId, node],
+      ),
+    );
     appendTimedEvents(
       ctx,
       column,
-      outsideView.get(date) ?? ctx.segmentsForDay(date),
+      segments,
       column.dataset.resourceId,
-      0,
-      1440,
+      ctx.min(),
+      endMinute,
       (event) => {
+        const original = existing.get(event.id);
+        if (original) {
+          savedClasses.set(original, original.className);
+          original.classList.remove(
+            "fc-continues-before",
+            "fc-continues-after",
+          );
+          return original;
+        }
         const node = element(ctx.doc, "div", "fc-event fc-next-day-event");
         node.inert = true;
         if (event.color)
@@ -77,7 +112,7 @@ export function extendOvernightDrag<E extends CalendarEvent>(
         return node;
       },
       (node, start, end) => {
-        node.style.top = `${originalHeight + (start / 60) * hourHeight}px`;
+        node.style.top = `${((start - ctx.min()) / 60) * hourHeight}px`;
         node.style.height = `${((end - start) / 60) * hourHeight}px`;
       },
     );
@@ -87,6 +122,7 @@ export function extendOvernightDrag<E extends CalendarEvent>(
     endMinute,
     restore() {
       for (const node of temporary) node.remove();
+      for (const [node, className] of savedClasses) node.className = className;
       for (const [node, style] of saved) {
         if (style === null) node.removeAttribute("style");
         else node.setAttribute("style", style);

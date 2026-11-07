@@ -212,13 +212,14 @@ for (const finish of ["release", "cancel"] as const)
     await page.mouse.down();
     await page.mouse.move(a.x, a.y - 12);
     const temporary = page.locator(".fc-next-day-event");
-    await expect(temporary).toHaveCount(2);
+    await expect(temporary).toHaveCount(1);
     const continuing = page.locator(
-      '[data-resource-id="a"] > .fc-next-day-event',
+      '[data-resource-id="a"] > [data-event-id="night"]',
     );
-    await expect(continuing).toHaveText("Continuing");
-    await expect(continuing).toHaveCSS("top", "1536px");
-    await expect(continuing).toHaveCSS("height", "32px");
+    await expect(continuing).toContainText("Continuing");
+    await expect(continuing).not.toHaveClass(/fc-continues-after/);
+    await expect(continuing).toHaveCSS("top", "1520px");
+    await expect(continuing).toHaveCSS("height", "48px");
     const occupied = page.locator(
       '[data-resource-id="b"] > .fc-next-day-event',
     );
@@ -229,4 +230,67 @@ for (const finish of ["release", "cancel"] as const)
     if (finish === "cancel") await page.keyboard.press("Escape");
     await page.mouse.up();
     await expect(temporary).toHaveCount(0);
+    await expect(continuing).toHaveClass(/fc-continues-after/);
+    await expect(continuing).toHaveCSS("height", "16px");
+  });
+
+for (const theme of ["light", "dark"] as const)
+  test(`continuous overnight boxes share overlap lanes in ${theme} theme`, async ({
+    page,
+  }) => {
+    await page.evaluate((theme) => {
+      window.demoCalendar.update({
+        theme,
+        minMinute: 1200,
+        events: [
+          {
+            id: "across",
+            title: "Same title",
+            start: new Date("2026-11-03T23:00:00+09:00"),
+            end: new Date("2026-11-04T02:00:00+09:00"),
+          },
+          {
+            id: "next",
+            title: "Same title",
+            start: new Date("2026-11-04T00:30:00+09:00"),
+            end: new Date("2026-11-04T01:30:00+09:00"),
+          },
+          {
+            id: "midnight",
+            title: "Ends at midnight",
+            start: new Date("2026-11-03T22:00:00+09:00"),
+            end: new Date("2026-11-04T00:00:00+09:00"),
+          },
+        ],
+        onSelectSlot() {},
+      });
+      window.demoCalendar.scrollToTime(1200);
+    }, theme);
+    const original = page.locator('[data-event-id="across"]');
+    const before = await original.getAttribute("style");
+    const column = await page.locator(".fc-time-column").boundingBox();
+    await page.mouse.move(column!.x + 10, column!.y + 10);
+    await page.mouse.down();
+    await expect(page.locator(".fc-overnight-drag")).toHaveCount(1);
+    await expect(original).toHaveCount(1);
+    await expect(original).toHaveCSS("top", "192px");
+    await expect(original).toHaveCSS("height", "192px");
+    await expect(original).not.toHaveClass(/fc-continues-after/);
+    await expect(page.locator('[data-event-id="midnight"]')).toHaveCSS(
+      "height",
+      "128px",
+    );
+    const next = page.locator(".fc-next-day-event");
+    await expect(next).toHaveCount(1);
+    await expect(next).toHaveText("Same title");
+    const a = await original.boundingBox(),
+      b = await next.boundingBox();
+    expect(
+      Math.min(a!.x + a!.width, b!.x + b!.width) - Math.max(a!.x, b!.x),
+    ).toBeLessThanOrEqual(0);
+    await page.keyboard.press("Escape");
+    await page.mouse.up();
+    await expect(original).toHaveAttribute("style", before!);
+    await expect(original).toHaveClass(/fc-continues-after/);
+    await expect(next).toHaveCount(0);
   });

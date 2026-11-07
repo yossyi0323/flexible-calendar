@@ -2,6 +2,8 @@
 
 ## 0.1.0 — Unreleased
 
+- Keep existing overnight events in one continuous box with shared overlap lanes while next-day drag hours are visible.
+
 - Framework-independent TypeScript calendar core and DOM renderer.
 - Day, week, work-week, month, agenda and N-day date × resource vertical views.
 - Timed/all-day events, midnight segmentation, overlap layout and background events.
