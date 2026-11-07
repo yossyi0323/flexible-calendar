@@ -1,11 +1,13 @@
 import {
   addDays,
+  buildColumns,
   atMinute,
   indexSegments,
   type CalendarEvent,
 } from "../core/index.js";
 import type { CalendarContext } from "./context.js";
 import { applyStyle, element } from "./helpers.js";
+import { appendTimeGridGuides } from "./time-guides.js";
 import { appendTimedEvents } from "./time-view.js";
 
 /** Temporary next-day hours keep a downward drag continuous across midnight. */
@@ -56,7 +58,18 @@ export function extendOvernightDrag<E extends CalendarEvent>(
       .filter((date) => !visibleDates.has(date)),
     ctx.tz(),
   );
+  const columns = new Map(
+    buildColumns(ctx.options).map((column) => [column.key, column]),
+  );
   for (const column of body.querySelectorAll<HTMLElement>(".fc-time-column")) {
+    const guide = appendTimeGridGuides(
+      ctx,
+      column,
+      columns.get(column.dataset.columnKey!)!,
+      1440,
+      endMinute,
+    );
+    if (guide) temporary.push(guide);
     const date = addDays(column.dataset.date!, 1);
     appendTimedEvents(
       ctx,
