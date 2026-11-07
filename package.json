@@ -1,6 +1,6 @@
 {
   "name": "@yossyi0323/flexible-calendar",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "Framework-independent TypeScript calendar with native date × resource columns",
   "type": "module",
   "license": "MIT",
