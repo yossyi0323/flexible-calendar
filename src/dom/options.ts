@@ -24,6 +24,13 @@ export function validateOptions<E extends CalendarEvent>(
     (!Number.isInteger(options.monthMaxEvents) || options.monthMaxEvents < 0)
   )
     throw new RangeError("monthMaxEvents must be a nonnegative integer");
+  if (options.timeGridGuides) {
+    const interval = options.timeGridGuides.interval ?? 180;
+    if (!Number.isInteger(interval) || interval <= 0 || 1440 % interval !== 0)
+      throw new RangeError(
+        "timeGridGuides.interval must be a positive integer divisor of 1440",
+      );
+  }
   if (options.backgroundEvents)
     validateConfig({ ...options, events: options.backgroundEvents });
 }

@@ -45,6 +45,18 @@ export interface ElementStyle {
   className?: string;
   style?: Partial<CSSStyleDeclaration>;
 }
+export interface TimeGridGuides {
+  /** Wall-clock minutes, anchored to each midnight. Default 180; must divide 1440. */
+  interval?: number;
+  /** Default "lines". Labels and ticks can also be combined with lines via CSS. */
+  style?: "lines" | "labels" | "ticks";
+  /** Fresh, decorative text/DOM content for each label (not React/Vue content). */
+  renderLabel?: (context: {
+    column: Column;
+    minute: number;
+    dayOffset: number;
+  }) => Content;
+}
 export interface CalendarOptions<
   E extends CalendarEvent = CalendarEvent,
 > extends CalendarConfig<E> {
@@ -56,6 +68,8 @@ export interface CalendarOptions<
     minute: number;
     content: Content;
   }[];
+  /** Optional column-local wall-clock guides; omitted or false disables them. */
+  timeGridGuides?: false | TimeGridGuides;
   columnWidth?: number;
   theme?: "light" | "dark" | "auto";
   direction?: "ltr" | "rtl";
