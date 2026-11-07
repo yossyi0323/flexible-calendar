@@ -107,6 +107,8 @@ test("inset preserves short-event hit bounds and light/dark continuation edges",
       ),
     ).toBe("dashed");
     await expect(page.getByRole("listbox")).toHaveCount(0);
+    // Select restores trigger focus asynchronously after its listbox unmounts.
+    await expect(page.locator("#theme")).toBeFocused();
     await short.focus();
     await page.keyboard.press("Shift+Tab");
     await page.keyboard.press("Tab");
