@@ -6,6 +6,17 @@ A TypeScript calendar for plain DOM, React and Vue. Show **multiple columns for 
 
 ![Dark vertical calendar with real dates and Plan/Do columns](docs/images/vertical-dark.png)
 
+## Why I built this
+
+I built Flexible Calendar for my own time-management app, where I use it to compare what I planned to do with what I actually did. Two needs shaped its design:
+
+- **Plan and Do side by side for each date.** I wanted each day to have its own Plan and Do columns, so I could compare planned and actual time on the same time axis without switching calendars or views.
+- **One event, even across midnight.** An activity from 23:00 to 01:00 is still one activity. I wanted it to appear on both days while keeping a single event ID and its original start and end timestamps, without making the application maintain separate events for each day.
+
+These needs led to date × resource columns and rendering that splits events across days while preserving the original event. Plan and Do are one use of those columns; people and rooms can use the same model.
+
+I use the library in my own app and am developing it as an open-source project. Its API is still evolving as I use it in practice.
+
 ## Features
 
 - Day, week, work-week, month, agenda and configurable N-day vertical views.
